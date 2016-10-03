@@ -1,5 +1,6 @@
 package es.sandwatch.trim;
 
+
 /**
  * Main project class.
  *
