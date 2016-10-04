@@ -5,11 +5,14 @@ import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.impl.client.HttpClientBuilder;
+import org.json.JSONException;
+import org.json.JSONObject;
 
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.Reader;
+import java.util.*;
 
 
 /**
@@ -52,7 +55,13 @@ public class Trim{
         //Execute the requests to endpoints
         for (Endpoint endpoint:spec.getEndpoints()){
             RequestResult result = getEndpointData(endpoint);
-            System.out.println(result);
+
+            if (result.is2xx()){
+                List<String> keys = getJsonFieldList(result.getResponse());
+                for (String key:keys){
+                    System.out.println(key);
+                }
+            }
         }
     }
 
@@ -81,6 +90,22 @@ public class Trim{
             iox.printStackTrace();
         }
         return new RequestResult();
+    }
+
+    private List<String> getJsonFieldList(String src){
+        List<String> fieldSet = new ArrayList<>();
+        try{
+            JSONObject object = new JSONObject(src);
+
+            Iterator<String> keys = object.keys();
+            while (keys.hasNext()){
+                fieldSet.add(keys.next());
+            }
+        }
+        catch (JSONException jx){
+            jx.printStackTrace();
+        }
+        return fieldSet;
     }
 
 

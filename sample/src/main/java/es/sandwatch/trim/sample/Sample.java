@@ -15,7 +15,8 @@ public class Sample{
     public static void main(String args[]){
         System.out.println("I am running!!");
         ApiSpecification spec = new ApiSpecification()
-                .addEndpoint(new Endpoint("http://app.tndata.org/api/categories", null));
+                .addEndpoint(new Endpoint("http://app.tndata.org/api/categories/23/", null))
+                .addEndpoint(new Endpoint("http://app.tndata.org/api/goals/82/", null));
         Trim.run(spec);
     }
 }
