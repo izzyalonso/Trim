@@ -11,9 +11,15 @@ import org.json.JSONObject;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.io.Reader;
 import java.lang.reflect.Field;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 
 /**
@@ -111,30 +117,50 @@ public class Trim{
      * @return a bundle containing request code and result
      */
     private RequestResult getEndpointData(Endpoint endpoint){
+        //Create the request and add all the headers
         HttpGet request = new HttpGet(endpoint.getUrl());
         for (String header:endpoint.getHeaders().keySet()){
             request.addHeader(header, endpoint.getHeaders().get(header));
         }
 
+        RequestResult result = null;
+        BufferedReader reader = null;
         try{
             System.out.println("Executing request for " + endpoint.getUrl());
+
+            //Execute the request and create the reader
             HttpResponse response = client.execute(request);
+            reader = new BufferedReader(new InputStreamReader(response.getEntity().getContent()));
 
-            Reader isr = new InputStreamReader(response.getEntity().getContent());
-            BufferedReader reader = new BufferedReader(isr);
-
-            StringBuilder result = new StringBuilder();
+            //Fetch the result
+            StringBuilder stringBuilder = new StringBuilder();
             String line;
             while ((line = reader.readLine()) != null){
-                result.append(line);
+                stringBuilder.append(line);
             }
 
-            return new RequestResult(response.getStatusLine().getStatusCode(), result.toString());
+            //Create the result bundle
+            result = new RequestResult(response.getStatusLine().getStatusCode(), stringBuilder.toString());
         }
         catch (IOException iox){
             iox.printStackTrace();
         }
-        return new RequestResult();
+        finally{
+            if (reader != null){
+                try{
+                    reader.close();
+                }
+                catch (IOException iox){
+                    iox.printStackTrace();
+                }
+            }
+        }
+
+        //If there is no result, something went south
+        if (result == null){
+            result = new RequestResult();
+        }
+        return result;
     }
 
     /**
