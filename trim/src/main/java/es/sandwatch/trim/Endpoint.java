@@ -1,5 +1,6 @@
 package es.sandwatch.trim;
 
+import java.util.HashMap;
 import java.util.Map;
 
 
@@ -24,6 +25,7 @@ public class Endpoint{
     public Endpoint(String url, Class model){
         this.url = url;
         this.model = model;
+        this.headers = new HashMap<>();
     }
 
     /**
@@ -40,12 +42,17 @@ public class Endpoint{
     }
 
     /**
-     * Tells whether this endpoint has additional headers.
+     * Adds a header to this endpoint if the endpoint doesn't already have it.
      *
-     * @return true if this endpoint has additional headers, false otherwise.
+     * @param header the header to be added.
+     * @param value the value of the header to be added.
+     * @return this Endpoint.
      */
-    boolean hasHeaders(){
-        return headers != null && !headers.isEmpty();
+    Endpoint addHeader(String header, String value){
+        if (!headers.containsKey(header)){
+            headers.put(header, value);
+        }
+        return this;
     }
 
     /**
