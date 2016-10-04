@@ -67,7 +67,30 @@ public class Trim{
                 //Populate the field list
                 getFieldsOf(endpoint.getModel(), fields);
                 for (Field field:fields){
-                    System.out.println(field.getName());
+                    //Extract the serialized name of the field, annotation overrides field name
+                    AttributeName annotation = field.getAnnotation(AttributeName.class);
+                    String attributeName;
+                    if (annotation == null){
+                        attributeName = field.getName();
+                    }
+                    else{
+                        attributeName = annotation.value();
+                    }
+
+                    //Determine if it exists in the API response
+                    if (keys.contains(attributeName)){
+                        usageMap.put(attributeName, true);
+                        keys.remove(attributeName);
+                    }
+                }
+
+                //The rest of the fields in the keys set are not used in the model
+                for (String key:keys){
+                    usageMap.put(key, false);
+                }
+
+                for (String key:usageMap.keySet()){
+                    System.out.println(key + ": " + (usageMap.get(key) ? "used" : "not used"));
                 }
             }
         }
@@ -119,7 +142,6 @@ public class Trim{
     private void getFieldsOf(Class<?> targetClass, List<Field> targetList){
         if (!targetClass.equals(Object.class)){
             targetList.addAll(Arrays.asList(targetClass.getDeclaredFields()));
-            System.out.println("TargetList size: " + targetList.size());
             getFieldsOf(targetClass.getSuperclass(), targetList);
         }
     }
