@@ -19,7 +19,26 @@ import java.io.Reader;
  * @version 1.0.0
  */
 public class Trim{
+    /**
+     * Triggers the analysis.
+     *
+     * @param spec the ApiSpecification object containing all API and model information.
+     */
     public static void run(ApiSpecification spec){
+        Trim trim = new Trim(spec);
+        trim.run();
+    }
+
+
+    private ApiSpecification spec;
+    private HttpClient client;
+
+
+    private Trim(ApiSpecification spec){
+        this.spec = spec;
+    }
+
+    private void run(){
         //Add all generic headers to all endpoints
         for (Endpoint endpoint:spec.getEndpoints()){
             for (String header:spec.getHeaders().keySet()){
@@ -28,33 +47,138 @@ public class Trim{
         }
 
         //Create the http client object
-        HttpClient httpClient = HttpClientBuilder.create().build();
+        client = HttpClientBuilder.create().build();
 
         //Execute the requests to endpoints
         for (Endpoint endpoint:spec.getEndpoints()){
-            HttpGet request = new HttpGet(endpoint.getUrl());
-            for (String header:endpoint.getHeaders().keySet()){
-                request.addHeader(header, endpoint.getHeaders().get(header));
+            RequestResult result = getEndpointData(endpoint);
+            System.out.println(result);
+        }
+    }
+
+    private RequestResult getEndpointData(Endpoint endpoint){
+        HttpGet request = new HttpGet(endpoint.getUrl());
+        for (String header:endpoint.getHeaders().keySet()){
+            request.addHeader(header, endpoint.getHeaders().get(header));
+        }
+
+        try{
+            System.out.println("Executing request for " + endpoint.getUrl());
+            HttpResponse response = client.execute(request);
+
+            Reader isr = new InputStreamReader(response.getEntity().getContent());
+            BufferedReader reader = new BufferedReader(isr);
+
+            StringBuilder result = new StringBuilder();
+            String line;
+            while ((line = reader.readLine()) != null){
+                result.append(line);
             }
 
-            try{
-                System.out.println("Executing request for " + endpoint.getUrl());
-                HttpResponse response = httpClient.execute(request);
+            return new RequestResult(response.getStatusLine().getStatusCode(), result.toString());
+        }
+        catch (IOException iox){
+            iox.printStackTrace();
+        }
+        return new RequestResult();
+    }
 
-                Reader isr = new InputStreamReader(response.getEntity().getContent());
-                BufferedReader reader = new BufferedReader(isr);
 
-                StringBuilder result = new StringBuilder();
-                String line;
-                while ((line = reader.readLine()) != null){
-                    result.append(line);
-                }
+    /**
+     * Class containing the relevant information about the result of an HTTP request.
+     *
+     * @author Ismael Alonso
+     * @version 1.0.0
+     */
+    private class RequestResult{
+        private int statusCode;
+        private String response;
 
-                System.out.println("Result: " + result.toString());
-            }
-            catch (IOException iox){
-                iox.printStackTrace();
-            }
+
+        /**
+         * Constructor. Call if the request failed.
+         */
+        private RequestResult(){
+            this(-1, "Request failed");
+        }
+
+        /**
+         * Constructor. Call if the request got through to the server.
+         *
+         * @param statusCode the status code of the request.
+         * @param response the response to the request.
+         */
+        private RequestResult(int statusCode, String response){
+            this.statusCode = statusCode;
+            this.response = response;
+        }
+
+        /**
+         * Tells whether the request failed before it was sent.
+         *
+         * @return true if the request failed, false otherwise.
+         */
+        private boolean requestFailed(){
+            return statusCode == -1;
+        }
+
+        /**
+         * Tells whether the request yielded a 2xx status code.
+         *
+         * @return true if the request yielded a 2xx status code, false otherwise.
+         */
+        private boolean is2xx(){
+            return statusCode >= 200 && statusCode < 300;
+        }
+
+        /**
+         * Tells whether the request yielded a 3xx status code.
+         *
+         * @return true if the request yielded a 3xx status code, false otherwise.
+         */
+        private boolean is3xx(){
+            return statusCode >= 300 && statusCode < 400;
+        }
+
+        /**
+         * Tells whether the request yielded a 4xx status code.
+         *
+         * @return true if the request yielded a 4xx status code, false otherwise.
+         */
+        private boolean is4xx(){
+            return statusCode >= 400 && statusCode < 500;
+        }
+
+        /**
+         * Tells whether the request yielded a 5xx status code.
+         *
+         * @return true if the request yielded a 5xx status code, false otherwise.
+         */
+        private boolean is5xx(){
+            return statusCode >= 500 && statusCode < 600;
+        }
+
+        /**
+         * Status code getter.
+         *
+         * @return the status code.
+         */
+        private int getStatusCode(){
+            return statusCode;
+        }
+
+        /**
+         * Response getter.
+         *
+         * @return the response
+         */
+        private String getResponse(){
+            return response;
+        }
+
+        @Override
+        public String toString() {
+            return "Status code: " + statusCode + ", response: " + response;
         }
     }
 }
