@@ -12,6 +12,7 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.Reader;
+import java.lang.reflect.Field;
 import java.util.*;
 
 
@@ -56,10 +57,17 @@ public class Trim{
         for (Endpoint endpoint:spec.getEndpoints()){
             RequestResult result = getEndpointData(endpoint);
 
+            //If successful
             if (result.is2xx()){
-                List<String> keys = getJsonFieldList(result.getResponse());
-                for (String key:keys){
-                    System.out.println(key);
+                //Parse the response and create the usage map and the field list
+                Set<String> keys = getJsonFieldSet(result.getResponse());
+                Map<String, Boolean> usageMap = new HashMap<>();
+                List<Field> fields = new ArrayList<>();
+
+                //Populate the field list
+                getFieldsOf(endpoint.getModel(), fields);
+                for (Field field:fields){
+                    System.out.println(field.getName());
                 }
             }
         }
@@ -92,8 +100,8 @@ public class Trim{
         return new RequestResult();
     }
 
-    private List<String> getJsonFieldList(String src){
-        List<String> fieldSet = new ArrayList<>();
+    private Set<String> getJsonFieldSet(String src){
+        Set<String> fieldSet = new HashSet<>();
         try{
             JSONObject object = new JSONObject(src);
 
@@ -106,6 +114,14 @@ public class Trim{
             jx.printStackTrace();
         }
         return fieldSet;
+    }
+
+    private void getFieldsOf(Class<?> targetClass, List<Field> targetList){
+        if (!targetClass.equals(Object.class)){
+            targetList.addAll(Arrays.asList(targetClass.getDeclaredFields()));
+            System.out.println("TargetList size: " + targetList.size());
+            getFieldsOf(targetClass.getSuperclass(), targetList);
+        }
     }
 
 
