@@ -38,10 +38,18 @@ public class Trim{
     private HttpClient client;
 
 
+    /**
+     * Constructor.
+     *
+     * @param spec the ApiSpecification object containing all API and model information.
+     */
     private Trim(ApiSpecification spec){
         this.spec = spec;
     }
 
+    /**
+     * Runs the analysis.
+     */
     private void run(){
         //Add all generic headers to all endpoints
         for (Endpoint endpoint:spec.getEndpoints()){
@@ -60,7 +68,7 @@ public class Trim{
             //If successful
             if (result.is2xx()){
                 //Parse the response and create the usage map and the field list
-                Set<String> keys = getJsonFieldSet(result.getResponse());
+                Set<String> keys = getJsonAttributeSet(result.getResponse());
                 Map<String, Boolean> usageMap = new HashMap<>();
                 List<Field> fields = new ArrayList<>();
 
@@ -96,6 +104,12 @@ public class Trim{
         }
     }
 
+    /**
+     * Hits an endpoint and returns the result.
+     *
+     * @param endpoint the endpoint to hit.
+     * @return a bundle containing request code and result
+     */
     private RequestResult getEndpointData(Endpoint endpoint){
         HttpGet request = new HttpGet(endpoint.getUrl());
         for (String header:endpoint.getHeaders().keySet()){
@@ -123,7 +137,13 @@ public class Trim{
         return new RequestResult();
     }
 
-    private Set<String> getJsonFieldSet(String src){
+    /**
+     * Turns a string returned by an API endpoint into a Set of attributes.
+     *
+     * @param src the source string.
+     * @return the parsed set of attributes
+     */
+    private Set<String> getJsonAttributeSet(String src){
         Set<String> fieldSet = new HashSet<>();
         try{
             JSONObject object = new JSONObject(src);
@@ -134,11 +154,18 @@ public class Trim{
             }
         }
         catch (JSONException jx){
+            //TODO Should I return null to signal an error?
             jx.printStackTrace();
         }
         return fieldSet;
     }
 
+    /**
+     * Gathers all the fields declared and inherited by a class until the immediate child of Object.
+     *
+     * @param targetClass the class from which the fields are to be extracted.
+     * @param targetList the list where the fields are to be gathered.
+     */
     private void getFieldsOf(Class<?> targetClass, List<Field> targetList){
         if (!targetClass.equals(Object.class)){
             targetList.addAll(Arrays.asList(targetClass.getDeclaredFields()));
