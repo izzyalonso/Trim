@@ -14,11 +14,9 @@ import java.io.InputStreamReader;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
 
@@ -33,10 +31,11 @@ public class Trim{
      * Triggers the analysis.
      *
      * @param spec the ApiSpecification object containing all API and model information.
+     * @return the report object.
      */
-    public static void run(ApiSpecification spec){
+    public static Report run(ApiSpecification spec){
         Trim trim = new Trim(spec);
-        trim.run();
+        return trim.run();
     }
 
 
@@ -55,8 +54,10 @@ public class Trim{
 
     /**
      * Runs the analysis.
+     *
+     * @return the report object.
      */
-    private void run(){
+    private Report run(){
         //Add all generic headers to all endpoints
         for (Endpoint endpoint:spec.getEndpoints()){
             for (String header:spec.getHeaders().keySet()){
@@ -64,50 +65,54 @@ public class Trim{
             }
         }
 
-        //Create the http client object
+        //Create the http client and the report objects
         client = HttpClientBuilder.create().build();
+        Report report = new Report();
 
         //Execute the requests to endpoints
         for (Endpoint endpoint:spec.getEndpoints()){
             RequestResult result = getEndpointData(endpoint);
+            Report.EndpointReport endpointReport = report.addEndpointReport(endpoint, result);
 
             //If successful
             if (result.is2xx()){
                 //Parse the response and create the usage map and the field list
                 Set<String> keys = getJsonAttributeSet(result.getResponse());
-                Map<String, Boolean> usageMap = new HashMap<>();
-                List<Field> fields = new ArrayList<>();
-
-                //Populate the field list
-                getFieldsOf(endpoint.getModel(), fields);
-                for (Field field:fields){
-                    //Extract the serialized name of the field, annotation overrides field name
-                    AttributeName annotation = field.getAnnotation(AttributeName.class);
-                    String attributeName;
-                    if (annotation == null){
-                        attributeName = field.getName();
-                    }
-                    else{
-                        attributeName = annotation.value();
-                    }
-
-                    //Determine if it exists in the API response
-                    if (keys.contains(attributeName)){
-                        usageMap.put(attributeName, true);
-                        keys.remove(attributeName);
-                    }
+                if (keys == null){
+                    endpointReport.setResponseFormatError();
                 }
+                else {
+                    //Create and populate the field list
+                    List<Field> fields = new ArrayList<>();
+                    getFieldsOf(endpoint.getModel(), fields);
 
-                //The rest of the fields in the keys set are not used in the model
-                for (String key:keys){
-                    usageMap.put(key, false);
-                }
+                    for (Field field:fields){
+                        //Extract the serialized name of the field, annotation overrides field name
+                        AttributeName annotation = field.getAnnotation(AttributeName.class);
+                        String attributeName;
+                        if (annotation == null){
+                            attributeName = field.getName();
+                        }
+                        else{
+                            attributeName = annotation.value();
+                        }
 
-                for (String key:usageMap.keySet()){
-                    System.out.println(key + ": " + (usageMap.get(key) ? "used" : "not used"));
+                        //Determine if it exists in the API response
+                        if (keys.contains(attributeName)){
+                            endpointReport.addAttributeReport(attributeName, true);
+                            keys.remove(attributeName);
+                        }
+                    }
+
+                    //The rest of the fields in the keys set are not used in the model
+                    for (String key:keys){
+                        endpointReport.addAttributeReport(key, false);
+                    }
                 }
             }
         }
+
+        return report;
     }
 
     /**
@@ -126,8 +131,6 @@ public class Trim{
         RequestResult result = null;
         BufferedReader reader = null;
         try{
-            System.out.println("Executing request for " + endpoint.getUrl());
-
             //Execute the request and create the reader
             HttpResponse response = client.execute(request);
             reader = new BufferedReader(new InputStreamReader(response.getEntity().getContent()));
@@ -167,7 +170,7 @@ public class Trim{
      * Turns a string returned by an API endpoint into a Set of attributes.
      *
      * @param src the source string.
-     * @return the parsed set of attributes
+     * @return the parsed set of attributes or null if src couldn't be interpreted.
      */
     private Set<String> getJsonAttributeSet(String src){
         Set<String> fieldSet = new HashSet<>();
@@ -180,8 +183,8 @@ public class Trim{
             }
         }
         catch (JSONException jx){
-            //TODO Should I return null to signal an error?
             jx.printStackTrace();
+            return null;
         }
         return fieldSet;
     }
@@ -206,7 +209,7 @@ public class Trim{
      * @author Ismael Alonso
      * @version 1.0.0
      */
-    private class RequestResult{
+    class RequestResult{
         private int statusCode;
         private String response;
 
@@ -234,7 +237,7 @@ public class Trim{
          *
          * @return true if the request failed, false otherwise.
          */
-        private boolean requestFailed(){
+        boolean requestFailed(){
             return statusCode == -1;
         }
 
@@ -243,7 +246,7 @@ public class Trim{
          *
          * @return true if the request yielded a 2xx status code, false otherwise.
          */
-        private boolean is2xx(){
+        boolean is2xx(){
             return statusCode >= 200 && statusCode < 300;
         }
 
@@ -252,7 +255,7 @@ public class Trim{
          *
          * @return true if the request yielded a 3xx status code, false otherwise.
          */
-        private boolean is3xx(){
+        boolean is3xx(){
             return statusCode >= 300 && statusCode < 400;
         }
 
@@ -261,7 +264,7 @@ public class Trim{
          *
          * @return true if the request yielded a 4xx status code, false otherwise.
          */
-        private boolean is4xx(){
+        boolean is4xx(){
             return statusCode >= 400 && statusCode < 500;
         }
 
@@ -270,7 +273,7 @@ public class Trim{
          *
          * @return true if the request yielded a 5xx status code, false otherwise.
          */
-        private boolean is5xx(){
+        boolean is5xx(){
             return statusCode >= 500 && statusCode < 600;
         }
 
@@ -279,7 +282,7 @@ public class Trim{
          *
          * @return the status code.
          */
-        private int getStatusCode(){
+        int getStatusCode(){
             return statusCode;
         }
 
@@ -288,7 +291,7 @@ public class Trim{
          *
          * @return the response
          */
-        private String getResponse(){
+        String getResponse(){
             return response;
         }
 
