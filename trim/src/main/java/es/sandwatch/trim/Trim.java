@@ -206,7 +206,7 @@ public class Trim{
      * @author Ismael Alonso
      * @version 1.0.0
      */
-    private class RequestResult{
+    class RequestResult{
         private int statusCode;
         private String response;
 
@@ -234,7 +234,7 @@ public class Trim{
          *
          * @return true if the request failed, false otherwise.
          */
-        private boolean requestFailed(){
+        boolean requestFailed(){
             return statusCode == -1;
         }
 
@@ -243,7 +243,7 @@ public class Trim{
          *
          * @return true if the request yielded a 2xx status code, false otherwise.
          */
-        private boolean is2xx(){
+        boolean is2xx(){
             return statusCode >= 200 && statusCode < 300;
         }
 
@@ -252,7 +252,7 @@ public class Trim{
          *
          * @return true if the request yielded a 3xx status code, false otherwise.
          */
-        private boolean is3xx(){
+        boolean is3xx(){
             return statusCode >= 300 && statusCode < 400;
         }
 
@@ -261,7 +261,7 @@ public class Trim{
          *
          * @return true if the request yielded a 4xx status code, false otherwise.
          */
-        private boolean is4xx(){
+        boolean is4xx(){
             return statusCode >= 400 && statusCode < 500;
         }
 
@@ -270,7 +270,7 @@ public class Trim{
          *
          * @return true if the request yielded a 5xx status code, false otherwise.
          */
-        private boolean is5xx(){
+        boolean is5xx(){
             return statusCode >= 500 && statusCode < 600;
         }
 
@@ -279,7 +279,7 @@ public class Trim{
          *
          * @return the status code.
          */
-        private int getStatusCode(){
+        int getStatusCode(){
             return statusCode;
         }
 
@@ -288,7 +288,7 @@ public class Trim{
          *
          * @return the response
          */
-        private String getResponse(){
+        String getResponse(){
             return response;
         }
 
