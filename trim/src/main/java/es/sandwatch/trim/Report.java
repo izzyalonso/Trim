@@ -20,8 +20,10 @@ public class Report{
         endpointReports = new ArrayList<>();
     }
 
-    void addEndpointReport(EndpointReport endpointReport){
-        endpointReports.add(endpointReport);
+    EndpointReport addEndpointReport(Endpoint endpoint, Trim.RequestResult requestResult){
+        EndpointReport report = new EndpointReport(endpoint, requestResult);
+        endpointReports.add(report);
+        return report;
     }
 
     @Override
@@ -53,7 +55,7 @@ public class Report{
         private Map<String, Boolean> attributeReports;
 
 
-        EndpointReport(Endpoint endpoint, Trim.RequestResult requestResult){
+        private EndpointReport(Endpoint endpoint, Trim.RequestResult requestResult){
             this.endpoint = endpoint;
             this.requestResult = requestResult;
             this.responseFormatError = false;
