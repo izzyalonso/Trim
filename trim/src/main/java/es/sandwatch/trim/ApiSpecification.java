@@ -1,5 +1,7 @@
 package es.sandwatch.trim;
 
+import org.jetbrains.annotations.NotNull;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -37,7 +39,7 @@ public class ApiSpecification{
      * @param endpoint the endpoint to be added.
      * @return this object.
      */
-    public ApiSpecification addEndpoint(Endpoint endpoint){
+    public ApiSpecification addEndpoint(@NotNull Endpoint endpoint){
         endpoints.add(endpoint);
         return this;
     }
@@ -49,7 +51,7 @@ public class ApiSpecification{
      * @param value the value of the header to be added.
      * @return this object.
      */
-    public ApiSpecification addHeader(String header, String value){
+    public ApiSpecification addHeader(@NotNull String header, @NotNull String value){
         headers.put(header, value);
         return this;
     }
@@ -59,7 +61,7 @@ public class ApiSpecification{
      *
      * @return the list of endpoints in this specification.
      */
-    List<Endpoint> getEndpoints(){
+    @NotNull List<Endpoint> getEndpoints(){
         return endpoints;
     }
 
@@ -68,7 +70,7 @@ public class ApiSpecification{
      *
      * @return a map containing the headers that apply to all endpoints in this specification.
      */
-    Map<String, String> getHeaders(){
+    @NotNull Map<String, String> getHeaders(){
         return headers;
     }
 }

@@ -48,7 +48,7 @@ public class Endpoint{
      * @param value the value of the header to be added.
      * @return this Endpoint.
      */
-    @NotNull Endpoint addHeader(@NotNull String header, @NotNull String value){
+    Endpoint addHeader(@NotNull String header, @NotNull String value){
         if (!headers.containsKey(header)){
             headers.put(header, value);
         }
