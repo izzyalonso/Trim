@@ -5,6 +5,8 @@ import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.impl.client.HttpClientBuilder;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -28,28 +30,42 @@ import java.util.Set;
  */
 public class Trim{
     /**
-     * Triggers the analysis.
+     * Triggers the analysis without setting a progress listener.
      *
-     * @param spec the ApiSpecification object containing all API and model information.
+     * @param specification the ApiSpecification object containing all API and model information.
      * @return the report object.
      */
-    public static Report run(ApiSpecification spec){
-        Trim trim = new Trim(spec);
+    public static @NotNull Report run(@NotNull ApiSpecification specification){
+        return run(specification, null);
+    }
+
+    /**
+     * Triggers the analysis with a progress listener.
+     *
+     * @param specification the ApiSpecification object containing all API and model information.
+     * @param listener the progress listener or null if you are not interested in progress updates.
+     * @return the report object.
+     */
+    public static @NotNull Report run(@NotNull ApiSpecification specification, @Nullable ProgressListener listener){
+        Trim trim = new Trim(specification, listener);
         return trim.run();
     }
 
 
-    private ApiSpecification spec;
+    private ApiSpecification specification;
+    private ProgressListener listener;
     private HttpClient client;
 
 
     /**
      * Constructor.
      *
-     * @param spec the ApiSpecification object containing all API and model information.
+     * @param specification the ApiSpecification object containing all API and model information.
+     * @param listener the progress listener or null if you are not interested in progress updates.
      */
-    private Trim(ApiSpecification spec){
-        this.spec = spec;
+    private Trim(@NotNull ApiSpecification specification, @Nullable ProgressListener listener){
+        this.specification = specification;
+        this.listener = listener;
     }
 
     /**
@@ -57,11 +73,11 @@ public class Trim{
      *
      * @return the report object.
      */
-    private Report run(){
+    private @NotNull Report run(){
         //Add all generic headers to all endpoints
-        for (Endpoint endpoint:spec.getEndpoints()){
-            for (String header:spec.getHeaders().keySet()){
-                endpoint.addHeader(header, spec.getHeaders().get(header));
+        for (Endpoint endpoint: specification.getEndpoints()){
+            for (String header: specification.getHeaders().keySet()){
+                endpoint.addHeader(header, specification.getHeaders().get(header));
             }
         }
 
@@ -69,8 +85,11 @@ public class Trim{
         client = HttpClientBuilder.create().build();
         Report report = new Report();
 
+        //Initialize a counter
+        int completed = 0;
+
         //Execute the requests to endpoints
-        for (Endpoint endpoint:spec.getEndpoints()){
+        for (Endpoint endpoint: specification.getEndpoints()){
             RequestResult result = getEndpointData(endpoint);
             Report.EndpointReport endpointReport = report.addEndpointReport(endpoint, result);
 
@@ -110,6 +129,10 @@ public class Trim{
                     }
                 }
             }
+
+            if (listener != null){
+                listener.onEndpointReportComplete(endpoint, ++completed);
+            }
         }
 
         return report;
@@ -121,7 +144,7 @@ public class Trim{
      * @param endpoint the endpoint to hit.
      * @return a bundle containing request code and result
      */
-    private RequestResult getEndpointData(Endpoint endpoint){
+    private @NotNull RequestResult getEndpointData(Endpoint endpoint){
         //Create the request and add all the headers
         HttpGet request = new HttpGet(endpoint.getUrl());
         for (String header:endpoint.getHeaders().keySet()){
@@ -172,7 +195,7 @@ public class Trim{
      * @param src the source string.
      * @return the parsed set of attributes or null if src couldn't be interpreted.
      */
-    private Set<String> getJsonAttributeSet(String src){
+    private @Nullable Set<String> getJsonAttributeSet(String src){
         Set<String> fieldSet = new HashSet<>();
         try{
             JSONObject object = new JSONObject(src);
@@ -195,7 +218,7 @@ public class Trim{
      * @param targetClass the class from which the fields are to be extracted.
      * @param targetList the list where the fields are to be gathered.
      */
-    private void getFieldsOf(Class<?> targetClass, List<Field> targetList){
+    private void getFieldsOf(@NotNull Class<?> targetClass, @NotNull List<Field> targetList){
         if (!targetClass.equals(Object.class)){
             targetList.addAll(Arrays.asList(targetClass.getDeclaredFields()));
             getFieldsOf(targetClass.getSuperclass(), targetList);
@@ -227,7 +250,7 @@ public class Trim{
          * @param statusCode the status code of the request.
          * @param response the response to the request.
          */
-        private RequestResult(int statusCode, String response){
+        private RequestResult(int statusCode, @NotNull String response){
             this.statusCode = statusCode;
             this.response = response;
         }
@@ -291,7 +314,7 @@ public class Trim{
          *
          * @return the response
          */
-        String getResponse(){
+        @NotNull String getResponse(){
             return response;
         }
 
@@ -299,5 +322,22 @@ public class Trim{
         public String toString() {
             return "Status code: " + statusCode + ", response: " + response;
         }
+    }
+
+
+    /**
+     * Interface used to listen to progress updates from Trim.
+     *
+     * @author Ismael Alonso
+     * @version 1.0.0
+     */
+    public interface ProgressListener{
+        /**
+         * Called when the report about an individual endpoint has been completed.
+         *
+         * @param endpoint the endpoint whose report has been complete.
+         * @param completed the number of endpoints whose reports have been completed.
+         */
+        void onEndpointReportComplete(@NotNull Endpoint endpoint, int completed);
     }
 }

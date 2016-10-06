@@ -1,5 +1,7 @@
 package es.sandwatch.trim;
 
+import org.jetbrains.annotations.NotNull;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -30,7 +32,8 @@ public class Report{
      * @param requestResult the result of the request to the above endpoint.
      * @return the report object.
      */
-    EndpointReport addEndpointReport(Endpoint endpoint, Trim.RequestResult requestResult){
+    @NotNull
+    EndpointReport addEndpointReport(@NotNull Endpoint endpoint, @NotNull Trim.RequestResult requestResult){
         EndpointReport report = new EndpointReport(endpoint, requestResult);
         endpointReports.add(report);
         return report;
@@ -71,7 +74,7 @@ public class Report{
          * @param endpoint the endpoint associated to the report.
          * @param requestResult the result of the request to the above endpoint.
          */
-        private EndpointReport(Endpoint endpoint, Trim.RequestResult requestResult){
+        private EndpointReport(@NotNull Endpoint endpoint, @NotNull Trim.RequestResult requestResult){
             this.endpoint = endpoint;
             this.requestResult = requestResult;
             this.responseFormatError = false;
@@ -91,13 +94,13 @@ public class Report{
          * @param attribute the relevant attribute.
          * @param used whether the model uses it.
          */
-        void addAttributeReport(String attribute, boolean used){
+        void addAttributeReport(@NotNull String attribute, boolean used){
             attributeReports.put(attribute, used);
         }
 
         @Override
         public String toString(){
-            String report = endpoint.getModel().getName() + " -> " + endpoint.getUrl();
+            String report = endpoint.toString();
             if (requestResult.requestFailed()){
                 report += "\n  The request could not be performed.";
             }

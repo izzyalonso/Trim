@@ -1,5 +1,7 @@
 package es.sandwatch.trim;
 
+import org.jetbrains.annotations.NotNull;
+
 import java.util.HashMap;
 import java.util.Map;
 
@@ -22,10 +24,8 @@ public class Endpoint{
      * @param url the endpoint url.
      * @param model the model associated to the endpoint.
      */
-    public Endpoint(String url, Class model){
-        this.url = url;
-        this.model = model;
-        this.headers = new HashMap<>();
+    public Endpoint(@NotNull String url, @NotNull Class model){
+        this(url, model, new HashMap<>());
     }
 
     /**
@@ -35,7 +35,7 @@ public class Endpoint{
      * @param model the model associated to the endpoint.
      * @param headers the additional headers this endpoint should be queried with.
      */
-    public Endpoint(String url, Class model, Map<String, String> headers){
+    public Endpoint(@NotNull String url, @NotNull Class model, @NotNull Map<String, String> headers){
         this.url = url;
         this.model = model;
         this.headers = headers;
@@ -48,7 +48,7 @@ public class Endpoint{
      * @param value the value of the header to be added.
      * @return this Endpoint.
      */
-    Endpoint addHeader(String header, String value){
+    Endpoint addHeader(@NotNull String header, @NotNull String value){
         if (!headers.containsKey(header)){
             headers.put(header, value);
         }
@@ -60,7 +60,7 @@ public class Endpoint{
      *
      * @return the endpoint's url.
      */
-    String getUrl(){
+    @NotNull String getUrl(){
         return url;
     }
 
@@ -69,7 +69,7 @@ public class Endpoint{
      *
      * @return the model associated to the endpoint.
      */
-    Class getModel(){
+    @NotNull Class getModel(){
         return model;
     }
 
@@ -78,7 +78,12 @@ public class Endpoint{
      *
      * @return the endpoint's additional headers.
      */
-    Map<String, String> getHeaders(){
+    @NotNull Map<String, String> getHeaders(){
         return headers;
+    }
+
+    @Override
+    public String toString(){
+        return model.getName() + " -> " + url;
     }
 }
