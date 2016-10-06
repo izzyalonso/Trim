@@ -5,6 +5,8 @@ import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.impl.client.HttpClientBuilder;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -30,26 +32,30 @@ public class Trim{
     /**
      * Triggers the analysis.
      *
-     * @param spec the ApiSpecification object containing all API and model information.
+     * @param specification the ApiSpecification object containing all API and model information.
+     * @param listener the progress listener or null if you are not interested in progress updates.
      * @return the report object.
      */
-    public static Report run(ApiSpecification spec){
-        Trim trim = new Trim(spec);
+    public static Report run(@NotNull ApiSpecification specification, @Nullable ProgressListener listener){
+        Trim trim = new Trim(specification, listener);
         return trim.run();
     }
 
 
-    private ApiSpecification spec;
+    private ApiSpecification specification;
+    private ProgressListener listener;
     private HttpClient client;
 
 
     /**
      * Constructor.
      *
-     * @param spec the ApiSpecification object containing all API and model information.
+     * @param specification the ApiSpecification object containing all API and model information.
+     * @param listener the progress listener or null if you are not interested in progress updates.
      */
-    private Trim(ApiSpecification spec){
-        this.spec = spec;
+    private Trim(@NotNull ApiSpecification specification, @Nullable ProgressListener listener){
+        this.specification = specification;
+        this.listener = listener;
     }
 
     /**
@@ -59,9 +65,9 @@ public class Trim{
      */
     private Report run(){
         //Add all generic headers to all endpoints
-        for (Endpoint endpoint:spec.getEndpoints()){
-            for (String header:spec.getHeaders().keySet()){
-                endpoint.addHeader(header, spec.getHeaders().get(header));
+        for (Endpoint endpoint: specification.getEndpoints()){
+            for (String header: specification.getHeaders().keySet()){
+                endpoint.addHeader(header, specification.getHeaders().get(header));
             }
         }
 
@@ -69,8 +75,11 @@ public class Trim{
         client = HttpClientBuilder.create().build();
         Report report = new Report();
 
+        //Initialize a counter
+        int completed = 0;
+
         //Execute the requests to endpoints
-        for (Endpoint endpoint:spec.getEndpoints()){
+        for (Endpoint endpoint: specification.getEndpoints()){
             RequestResult result = getEndpointData(endpoint);
             Report.EndpointReport endpointReport = report.addEndpointReport(endpoint, result);
 
@@ -109,6 +118,10 @@ public class Trim{
                         endpointReport.addAttributeReport(key, false);
                     }
                 }
+            }
+
+            if (listener != null){
+                listener.onEndpointReportComplete(endpoint, ++completed);
             }
         }
 

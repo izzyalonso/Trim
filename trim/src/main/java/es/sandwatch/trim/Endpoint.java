@@ -81,4 +81,9 @@ public class Endpoint{
     Map<String, String> getHeaders(){
         return headers;
     }
+
+    @Override
+    public String toString(){
+        return model.getName() + " -> " + url;
+    }
 }

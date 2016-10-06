@@ -97,7 +97,7 @@ public class Report{
 
         @Override
         public String toString(){
-            String report = endpoint.getModel().getName() + " -> " + endpoint.getUrl();
+            String report = endpoint.toString();
             if (requestResult.requestFailed()){
                 report += "\n  The request could not be performed.";
             }
