@@ -30,7 +30,18 @@ import java.util.Set;
  */
 public class Trim{
     /**
-     * Triggers the analysis.
+     * Triggers the analysis without setting a progress listener.
+     *
+     * @param specification the ApiSpecification object containing all API and model information.
+     * @return the report object.
+     */
+    public static Report run(@NotNull ApiSpecification specification){
+        Trim trim = new Trim(specification, null);
+        return trim.run();
+    }
+
+    /**
+     * Triggers the analysis with a progress listener.
      *
      * @param specification the ApiSpecification object containing all API and model information.
      * @param listener the progress listener or null if you are not interested in progress updates.
