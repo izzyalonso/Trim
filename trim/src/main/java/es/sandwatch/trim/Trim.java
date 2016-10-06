@@ -300,4 +300,21 @@ public class Trim{
             return "Status code: " + statusCode + ", response: " + response;
         }
     }
+
+
+    /**
+     * Interface used to listen to progress updates from Trim.
+     *
+     * @author Ismael Alonso
+     * @version 1.0.0
+     */
+    public interface ProgressListener{
+        /**
+         * Called when the report about an individual endpoint has been completed.
+         *
+         * @param endpoint the endpoint whose report has been complete.
+         * @param completed the number of endpoints whose reports have been completed.
+         */
+        void onEndpointReportComplete(Endpoint endpoint, int completed);
+    }
 }
