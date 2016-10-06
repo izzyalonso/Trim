@@ -35,9 +35,8 @@ public class Trim{
      * @param specification the ApiSpecification object containing all API and model information.
      * @return the report object.
      */
-    public static Report run(@NotNull ApiSpecification specification){
-        Trim trim = new Trim(specification, null);
-        return trim.run();
+    public static @NotNull Report run(@NotNull ApiSpecification specification){
+        return run(specification, null);
     }
 
     /**
@@ -47,7 +46,7 @@ public class Trim{
      * @param listener the progress listener or null if you are not interested in progress updates.
      * @return the report object.
      */
-    public static Report run(@NotNull ApiSpecification specification, @Nullable ProgressListener listener){
+    public static @NotNull Report run(@NotNull ApiSpecification specification, @Nullable ProgressListener listener){
         Trim trim = new Trim(specification, listener);
         return trim.run();
     }
@@ -74,7 +73,7 @@ public class Trim{
      *
      * @return the report object.
      */
-    private Report run(){
+    private @NotNull Report run(){
         //Add all generic headers to all endpoints
         for (Endpoint endpoint: specification.getEndpoints()){
             for (String header: specification.getHeaders().keySet()){
@@ -145,7 +144,7 @@ public class Trim{
      * @param endpoint the endpoint to hit.
      * @return a bundle containing request code and result
      */
-    private RequestResult getEndpointData(Endpoint endpoint){
+    private @NotNull RequestResult getEndpointData(Endpoint endpoint){
         //Create the request and add all the headers
         HttpGet request = new HttpGet(endpoint.getUrl());
         for (String header:endpoint.getHeaders().keySet()){
@@ -196,7 +195,7 @@ public class Trim{
      * @param src the source string.
      * @return the parsed set of attributes or null if src couldn't be interpreted.
      */
-    private Set<String> getJsonAttributeSet(String src){
+    private @Nullable Set<String> getJsonAttributeSet(String src){
         Set<String> fieldSet = new HashSet<>();
         try{
             JSONObject object = new JSONObject(src);
@@ -219,7 +218,7 @@ public class Trim{
      * @param targetClass the class from which the fields are to be extracted.
      * @param targetList the list where the fields are to be gathered.
      */
-    private void getFieldsOf(Class<?> targetClass, List<Field> targetList){
+    private void getFieldsOf(@NotNull Class<?> targetClass, @NotNull List<Field> targetList){
         if (!targetClass.equals(Object.class)){
             targetList.addAll(Arrays.asList(targetClass.getDeclaredFields()));
             getFieldsOf(targetClass.getSuperclass(), targetList);
@@ -251,7 +250,7 @@ public class Trim{
          * @param statusCode the status code of the request.
          * @param response the response to the request.
          */
-        private RequestResult(int statusCode, String response){
+        private RequestResult(int statusCode, @NotNull String response){
             this.statusCode = statusCode;
             this.response = response;
         }
@@ -315,7 +314,7 @@ public class Trim{
          *
          * @return the response
          */
-        String getResponse(){
+        @NotNull String getResponse(){
             return response;
         }
 
@@ -339,6 +338,6 @@ public class Trim{
          * @param endpoint the endpoint whose report has been complete.
          * @param completed the number of endpoints whose reports have been completed.
          */
-        void onEndpointReportComplete(Endpoint endpoint, int completed);
+        void onEndpointReportComplete(@NotNull Endpoint endpoint, int completed);
     }
 }
