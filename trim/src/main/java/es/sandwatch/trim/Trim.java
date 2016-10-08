@@ -11,6 +11,7 @@ import org.jetbrains.annotations.Nullable;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.lang.reflect.Field;
 import java.util.*;
 
 
@@ -88,13 +89,13 @@ public class Trim{
             //If successful
             if (result.is2xx()){
                 //Parse the response and create the usage map and the field list
-                Parser.FieldNode keys = Parser.parseJson(result.getResponse());
+                Parser.FieldNode<Parser.JsonType> keys = Parser.parseJson(result.getResponse());
                 if (!keys.isParsedObject()){
                     endpointReport.setResponseFormatError();
                 }
                 else {
                     //Create and populate the field list
-                    List<Parser.FieldNode> fields = Parser.parseClass(endpoint.getModel());
+                    List<Parser.FieldNode<Field>> fields = Parser.parseClass(endpoint.getModel());
                     for (Parser.FieldNode field:fields){
                         //Determine if it exists in the API response
                         if (keys.contains(field.getName())){

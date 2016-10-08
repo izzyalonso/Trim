@@ -3,6 +3,7 @@ package es.sandwatch.trim;
 import org.apache.commons.lang3.ClassUtils;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -23,8 +24,8 @@ class Parser{
      * @param src the class to parse.
      * @return the root node of the complete model hierarchy
      */
-    static @NotNull List<FieldNode> parseClass(@NotNull Class<?> src){
-        List<FieldNode> classFields = new ArrayList<>();
+    static @NotNull List<FieldNode<Field>> parseClass(@NotNull Class<?> src){
+        List<FieldNode<Field>> classFields = new ArrayList<>();
         new Parser().parseClass(src, classFields);
         return classFields;
     }
@@ -35,8 +36,8 @@ class Parser{
      * @param src the source string.
      * @return a set of FieldNodes.
      */
-    static @NotNull FieldNode parseJson(@NotNull String src){
-        return new FieldNode("root", new Parser().parseJsonInternal(src));
+    static @NotNull FieldNode<JsonType> parseJson(@NotNull String src){
+        return new FieldNode<>(JsonType.OBJECT, "root", new Parser().parseJsonInternal(src));
     }
 
 
@@ -61,7 +62,7 @@ class Parser{
      * @param srcClass the class to parse.
      * @param targetList the root node of the model hierarchy
      */
-    private void parseClass(@NotNull Class<?> srcClass, @NotNull List<FieldNode> targetList){
+    private void parseClass(@NotNull Class<?> srcClass, @NotNull List<FieldNode<Field>> targetList){
         //Do not parse java.lang.Object
         if (!srcClass.equals(Object.class)){
             seenClasses.add(srcClass);
@@ -77,7 +78,7 @@ class Parser{
                     else{
                         name = annotation.value();
                     }
-                    List<FieldNode> fieldClassFields = null;
+                    List<FieldNode<Field>> fieldClassFields = null;
 
                     Class<?> fieldClass = field.getType();
                     if (shouldParseClass(fieldClass)){
@@ -86,7 +87,7 @@ class Parser{
                     }
 
                     //Add a new FieldNode to the list
-                    targetList.add(new FieldNode(name, fieldClassFields));
+                    targetList.add(new FieldNode<>(field, name, fieldClassFields));
                 }
             }
 
@@ -122,8 +123,8 @@ class Parser{
      * @param src the source string.
      * @return a set of FieldNodes or null if src was malformatted.
      */
-    private @Nullable Set<FieldNode> parseJsonInternal(@NotNull String src){
-        Set<FieldNode> fieldSet = new HashSet<>();
+    private @Nullable Set<FieldNode<JsonType>> parseJsonInternal(@NotNull String src){
+        Set<FieldNode<JsonType>> fieldSet = new HashSet<>();
         try{
             //Parse the object and get a key iterator
             JSONObject object = new JSONObject(src);
@@ -132,14 +133,18 @@ class Parser{
             while (keys.hasNext()){
                 //Extract the next key
                 String key = keys.next();
-                Set<FieldNode> objectFields = null;
+                Set<FieldNode<JsonType>> objectFields = null;
                 Object unknown = object.get(key);
+                JsonType type = getJsonTypeOf(unknown);
                 //If the next object is a nested JSON object, parse it
-                if (unknown instanceof JSONObject){
+                if (type == JsonType.OBJECT){
                     objectFields = parseJsonInternal(unknown.toString());
                 }
+                else if (type == JsonType.ARRAY){
+                    objectFields = parseJsonArrayInternal((JSONArray)unknown);
+                }
                 //Add the node to the set
-                fieldSet.add(new FieldNode(key, objectFields));
+                fieldSet.add(new FieldNode<>(type, key, objectFields));
             }
         }
         catch (JSONException jx){
@@ -149,6 +154,65 @@ class Parser{
         return fieldSet;
     }
 
+    /**
+     * Parses a JSONArray into a FieldNode hierarchy.
+     *
+     * @param array the source JSONArray.
+     * @return a set of FieldNodes containing a single FieldNode representing the structure of the array's items.
+     */
+    private Set<FieldNode<JsonType>> parseJsonArrayInternal(JSONArray array){
+        Set<FieldNode<JsonType>> set = new HashSet<>();
+        if (array.length() == 0){
+            set.add(new FieldNode<>(JsonType.NONE, "", null));
+        }
+        else{
+            Set<FieldNode<JsonType>> objectFields = null;
+            //Get only the first item in the array, let's assume all items are of the same type
+            //TODO? Java is statically typed though
+            Object unknown = array.get(0);
+            JsonType type = getJsonTypeOf(unknown);
+            if (type == JsonType.OBJECT){
+                objectFields = parseJsonInternal(unknown.toString());
+            }
+            else if (type == JsonType.ARRAY){
+                objectFields = parseJsonArrayInternal((JSONArray)unknown);
+            }
+            set.add(new FieldNode<>(type, "", objectFields));
+        }
+        return set;
+    }
+
+    /**
+     * Gets the json type of an object returned by JSONObject.get().
+     *
+     * @param unknown the object to be evaluated.
+     * @return its JsonType.
+     */
+    private @NotNull JsonType getJsonTypeOf(@NotNull Object unknown){
+        if (JSONObject.NULL.equals(unknown)){
+            return JsonType.NULL;
+        }
+        if (unknown instanceof Boolean){
+            return JsonType.BOOLEAN;
+        }
+        if (unknown instanceof Integer || unknown instanceof Long){
+            return JsonType.NUMBER;
+        }
+        if (unknown instanceof Float || unknown instanceof Double){
+            return JsonType.NUMBER;
+        }
+        if (unknown instanceof String){
+            return JsonType.STRING;
+        }
+        if (unknown instanceof JSONObject){
+            return JsonType.OBJECT;
+        }
+        if (unknown instanceof JSONArray){
+            return JsonType.ARRAY;
+        }
+        return JsonType.NONE;
+    }
+
 
     /**
      * Represents an object in the field hierarchy.
@@ -156,9 +220,10 @@ class Parser{
      * @author Ismael Alonso
      * @version 1.0.0
      */
-    static class FieldNode{
+    static class FieldNode<T>{
+        private T payload;
         private String name;
-        private Collection<FieldNode> children;
+        private Collection<FieldNode<T>> children;
         private Set<String> childrenNames;
 
 
@@ -168,7 +233,8 @@ class Parser{
          * @param name the name of the field.
          * @param children a list containing the object's fields
          */
-        private FieldNode(@NotNull String name, @Nullable Collection<FieldNode> children){
+        private FieldNode(@NotNull T payload, @NotNull String name, @Nullable Collection<FieldNode<T>> children){
+            this.payload = payload;
             this.name = name;
             this.children = children;
             if (children != null){
@@ -177,6 +243,15 @@ class Parser{
                     childrenNames.add(child.getName());
                 }
             }
+        }
+
+        /**
+         * Payload getter.
+         *
+         * @return the node's payload.
+         */
+        @NotNull T getPayload(){
+            return payload;
         }
 
         /**
@@ -202,7 +277,7 @@ class Parser{
          *
          * @return the named list.
          */
-        @Nullable Collection<FieldNode> getChildren(){
+        @Nullable Collection<FieldNode<T>> getChildren(){
             return children;
         }
 
@@ -247,7 +322,7 @@ class Parser{
          */
         private String toString(String spacing){
             StringBuilder result = new StringBuilder();
-            result.append("\n").append(spacing).append(name);
+            result.append("\n").append(spacing).append(payload).append(" ").append(name);
             if (isParsedObject()){
                 spacing += "  ";
                 for (FieldNode field: children){
@@ -256,5 +331,16 @@ class Parser{
             }
             return result.toString();
         }
+    }
+
+
+    /**
+     * Data types supported by JSON.
+     *
+     * @author Ismael Alonso
+     * @version 1.0.0
+     */
+    enum JsonType{
+        NUMBER, STRING, BOOLEAN, ARRAY, OBJECT, NULL, NONE
     }
 }
