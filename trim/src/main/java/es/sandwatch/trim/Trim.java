@@ -13,9 +13,6 @@ import org.json.JSONObject;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.lang.reflect.Field;
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
@@ -102,24 +99,12 @@ public class Trim{
                 }
                 else {
                     //Create and populate the field list
-                    List<Field> fields = new ArrayList<>();
-                    getFieldsOf(endpoint.getModel(), fields);
-
-                    for (Field field:fields){
-                        //Extract the serialized name of the field, annotation overrides field name
-                        AttributeName annotation = field.getAnnotation(AttributeName.class);
-                        String attributeName;
-                        if (annotation == null){
-                            attributeName = field.getName();
-                        }
-                        else{
-                            attributeName = annotation.value();
-                        }
-
+                    List<Parser.ClassField> fields = Parser.parseClass(endpoint.getModel());
+                    for (Parser.ClassField field:fields){
                         //Determine if it exists in the API response
-                        if (keys.contains(attributeName)){
-                            endpointReport.addAttributeReport(attributeName, true);
-                            keys.remove(attributeName);
+                        if (keys.contains(field.getName())){
+                            endpointReport.addAttributeReport(field.getName(), true);
+                            keys.remove(field.getName());
                         }
                     }
 
@@ -210,19 +195,6 @@ public class Trim{
             return null;
         }
         return fieldSet;
-    }
-
-    /**
-     * Gathers all the fields declared and inherited by a class until the immediate child of Object.
-     *
-     * @param targetClass the class from which the fields are to be extracted.
-     * @param targetList the list where the fields are to be gathered.
-     */
-    private void getFieldsOf(@NotNull Class<?> targetClass, @NotNull List<Field> targetList){
-        if (!targetClass.equals(Object.class)){
-            targetList.addAll(Arrays.asList(targetClass.getDeclaredFields()));
-            getFieldsOf(targetClass.getSuperclass(), targetList);
-        }
     }
 
 

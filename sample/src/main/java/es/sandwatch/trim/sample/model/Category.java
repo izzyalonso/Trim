@@ -37,4 +37,7 @@ public class Category{
 
     @AttributeName("selected_by_default")
     private boolean selectedByDefault;
+
+    //@AttributeName("goal")
+    //private Goal goal;
 }
