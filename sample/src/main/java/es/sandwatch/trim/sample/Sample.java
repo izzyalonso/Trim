@@ -6,6 +6,7 @@ import es.sandwatch.trim.Report;
 import es.sandwatch.trim.Trim;
 import es.sandwatch.trim.sample.model.Category;
 import es.sandwatch.trim.sample.model.Goal;
+import org.jetbrains.annotations.NotNull;
 
 
 /**
@@ -24,7 +25,7 @@ public class Sample implements Trim.ProgressListener{
     }
 
     @Override
-    public void onEndpointReportComplete(Endpoint endpoint, int completed){
+    public void onEndpointReportComplete(@NotNull Endpoint endpoint, int completed){
         System.out.println(endpoint + ", " + completed + " completed so far.");
     }
 
