@@ -99,8 +99,8 @@ public class Trim{
                 }
                 else {
                     //Create and populate the field list
-                    List<Parser.ClassField> fields = Parser.parseClass(endpoint.getModel());
-                    for (Parser.ClassField field:fields){
+                    List<Parser.FieldNode> fields = Parser.parseClass(endpoint.getModel());
+                    for (Parser.FieldNode field:fields){
                         //Determine if it exists in the API response
                         if (keys.contains(field.getName())){
                             endpointReport.addAttributeReport(field.getName(), true);

@@ -21,8 +21,8 @@ class Parser{
      * @param target the class to parse.
      * @return the root node of the complete model hierarchy
      */
-    static @NotNull List<ClassField> parseClass(@NotNull Class<?> target){
-        List<ClassField> classFields = new ArrayList<>();
+    static @NotNull List<FieldNode> parseClass(@NotNull Class<?> target){
+        List<FieldNode> classFields = new ArrayList<>();
         new Parser().parseClass(target, classFields);
         return classFields;
     }
@@ -49,7 +49,7 @@ class Parser{
      * @param targetClass the class to parse.
      * @param targetList the root node of the model hierarchy
      */
-    private void parseClass(@NotNull Class<?> targetClass, @NotNull List<ClassField> targetList){
+    private void parseClass(@NotNull Class<?> targetClass, @NotNull List<FieldNode> targetList){
         //Do not parse java.lang.Object
         if (!targetClass.equals(Object.class)){
             seenClasses.add(targetClass);
@@ -64,7 +64,7 @@ class Parser{
                 else{
                     name = annotation.value();
                 }
-                List<ClassField> fieldClassFields = null;
+                List<FieldNode> fieldClassFields = null;
 
                 Class<?> fieldClass = field.getType();
                 if (shouldParseClass(fieldClass)){
@@ -72,8 +72,8 @@ class Parser{
                     parseClass(fieldClass, fieldClassFields);
                 }
 
-                //Add a new ClassField to the list
-                targetList.add(new ClassField(name, fieldClassFields));
+                //Add a new FieldNode to the list
+                targetList.add(new FieldNode(name, fieldClassFields));
             }
 
             //Parse superclasses as well
@@ -109,20 +109,20 @@ class Parser{
      * @author Ismael Alonso
      * @version 1.0.0
      */
-    static class ClassField{
+    static class FieldNode{
         private String name;
-        private List<ClassField> classFields;
+        private List<FieldNode> fieldNodes;
 
 
         /**
          * Constructor.
          *
          * @param name the name of the field.
-         * @param classFields a list containing the object's fields
+         * @param fieldNodes a list containing the object's fields
          */
-        private ClassField(@NotNull String name, @Nullable List<ClassField> classFields){
+        private FieldNode(@NotNull String name, @Nullable List<FieldNode> fieldNodes){
             this.name = name;
-            this.classFields = classFields;
+            this.fieldNodes = fieldNodes;
         }
 
         /**
@@ -140,7 +140,7 @@ class Parser{
          * @return true if it was, false otherwise.
          */
         boolean isParsedObject(){
-            return classFields == null;
+            return fieldNodes == null;
         }
 
         /**
@@ -148,8 +148,8 @@ class Parser{
          *
          * @return the named list.
          */
-        @Nullable List<ClassField> getClassFields(){
-            return classFields;
+        @Nullable List<FieldNode> getFieldNodes(){
+            return fieldNodes;
         }
 
         @Override
@@ -168,7 +168,7 @@ class Parser{
             result.append(spacing).append(name);
             if (isParsedObject()){
                 spacing += "  ";
-                for (ClassField field:classFields){
+                for (FieldNode field: fieldNodes){
                     result.append(field.toString(spacing));
                 }
             }
