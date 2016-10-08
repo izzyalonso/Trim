@@ -67,7 +67,7 @@ public class Trim{
      */
     private @NotNull Report run(){
         //Add all generic headers to all endpoints
-        for (Endpoint endpoint: specification.getEndpoints()){
+        for (EndpointLegacy endpoint: specification.getEndpoints()){
             for (String header: specification.getHeaders().keySet()){
                 endpoint.addHeader(header, specification.getHeaders().get(header));
             }
@@ -81,7 +81,7 @@ public class Trim{
         int completed = 0;
 
         //Execute the requests to endpoints
-        for (Endpoint endpoint: specification.getEndpoints()){
+        for (EndpointLegacy endpoint: specification.getEndpoints()){
             RequestResult result = getEndpointData(endpoint);
             Report.EndpointReport endpointReport = report.addEndpointReport(endpoint, result);
 
@@ -124,7 +124,7 @@ public class Trim{
      * @param endpoint the endpoint to hit.
      * @return a bundle containing request code and result
      */
-    private @NotNull RequestResult getEndpointData(Endpoint endpoint){
+    private @NotNull RequestResult getEndpointData(EndpointLegacy endpoint){
         //Create the request and add all the headers
         HttpGet request = new HttpGet(endpoint.getUrl());
         for (String header:endpoint.getHeaders().keySet()){
@@ -297,6 +297,6 @@ public class Trim{
          * @param endpoint the endpoint whose report has been complete.
          * @param completed the number of endpoints whose reports have been completed.
          */
-        void onEndpointReportComplete(@NotNull Endpoint endpoint, int completed);
+        void onEndpointReportComplete(@NotNull EndpointLegacy endpoint, int completed);
     }
 }

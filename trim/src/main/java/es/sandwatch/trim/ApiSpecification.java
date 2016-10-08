@@ -17,7 +17,7 @@ public class ApiSpecification{
     /**
      * The list of endpoints in the API.
      */
-    private List<Endpoint> endpoints;
+    private List<EndpointLegacy> endpoints;
 
     /**
      * The headers that apply to all endpoints in the API
@@ -39,7 +39,7 @@ public class ApiSpecification{
      * @param endpoint the endpoint to be added.
      * @return this object.
      */
-    public ApiSpecification addEndpoint(@NotNull Endpoint endpoint){
+    public ApiSpecification addEndpoint(@NotNull EndpointLegacy endpoint){
         endpoints.add(endpoint);
         return this;
     }
@@ -57,11 +57,11 @@ public class ApiSpecification{
     }
 
     /**
-     * Endpoint list getter.
+     * EndpointLegacy list getter.
      *
      * @return the list of endpoints in this specification.
      */
-    @NotNull List<Endpoint> getEndpoints(){
+    @NotNull List<EndpointLegacy> getEndpoints(){
         return endpoints;
     }
 

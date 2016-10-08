@@ -33,7 +33,7 @@ public class Report{
      * @return the report object.
      */
     @NotNull
-    EndpointReport addEndpointReport(@NotNull Endpoint endpoint, @NotNull Trim.RequestResult requestResult){
+    EndpointReport addEndpointReport(@NotNull EndpointLegacy endpoint, @NotNull Trim.RequestResult requestResult){
         EndpointReport report = new EndpointReport(endpoint, requestResult);
         endpointReports.add(report);
         return report;
@@ -62,7 +62,7 @@ public class Report{
      * @version 1.0.0
      */
     class EndpointReport{
-        private Endpoint endpoint;
+        private EndpointLegacy endpoint;
         private Trim.RequestResult requestResult;
         private boolean responseFormatError;
         private Map<String, Boolean> attributeReports;
@@ -74,7 +74,7 @@ public class Report{
          * @param endpoint the endpoint associated to the report.
          * @param requestResult the result of the request to the above endpoint.
          */
-        private EndpointReport(@NotNull Endpoint endpoint, @NotNull Trim.RequestResult requestResult){
+        private EndpointReport(@NotNull EndpointLegacy endpoint, @NotNull Trim.RequestResult requestResult){
             this.endpoint = endpoint;
             this.requestResult = requestResult;
             this.responseFormatError = false;
