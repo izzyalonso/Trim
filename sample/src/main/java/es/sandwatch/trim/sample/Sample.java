@@ -1,7 +1,6 @@
 package es.sandwatch.trim.sample;
 
 import es.sandwatch.trim.ApiSpecification;
-import es.sandwatch.trim.EndpointLegacy;
 import es.sandwatch.trim.Report;
 import es.sandwatch.trim.Trim;
 import es.sandwatch.trim.sample.model.Category;
@@ -25,8 +24,8 @@ public class Sample implements Trim.ProgressListener{
     }
 
     @Override
-    public void onEndpointReportComplete(@NotNull EndpointLegacy endpoint, int completed){
-        System.out.println(endpoint + ", " + completed + " completed so far.");
+    public void onEndpointReportComplete(@NotNull Class<?> model, int completed){
+        System.out.println(model + ", " + completed + " completed so far.");
     }
 
 
