@@ -85,6 +85,13 @@ class Parser{
                         fieldClassFields = new ArrayList<>();
                         parseClass(fieldClass, fieldClassFields);
                     }
+                    if (Collection.class.isAssignableFrom(fieldClass)){
+                        CollectionGenericType type = field.getAnnotation(CollectionGenericType.class);
+                        if (type != null){
+                            fieldClassFields = new ArrayList<>();
+                            parseClass(type.value(), fieldClassFields);
+                        }
+                    }
 
                     //Add a new FieldNode to the list
                     targetList.add(new FieldNode<>(field, name, fieldClassFields));
@@ -322,7 +329,11 @@ class Parser{
          */
         private String toString(String spacing){
             StringBuilder result = new StringBuilder();
-            result.append("\n").append(spacing).append(payload).append(" ").append(name);
+            result.append("\n").append(spacing);
+            if (!(payload instanceof Field)){
+                result.append(payload).append(" ");
+            }
+            result.append(name);
             if (isParsedObject()){
                 spacing += "  ";
                 for (FieldNode field: children){
