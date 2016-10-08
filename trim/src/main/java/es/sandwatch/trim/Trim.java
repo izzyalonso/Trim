@@ -13,10 +13,7 @@ import org.json.JSONObject;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 
 /**
@@ -94,6 +91,7 @@ public class Trim{
             if (result.is2xx()){
                 //Parse the response and create the usage map and the field list
                 Set<String> keys = getJsonAttributeSet(result.getResponse());
+                System.out.println(Parser.parseJson(result.getResponse()));
                 if (keys == null){
                     endpointReport.setResponseFormatError();
                 }
