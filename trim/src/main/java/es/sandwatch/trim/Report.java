@@ -105,6 +105,7 @@ public class Report{
                 report += "\n  The request could not be performed.";
             }
             else{
+                report += "\n  Request time: " + requestResult.getRequestTime() + "s";
                 report += "\n  Request status code: " + requestResult.getStatusCode();
                 if (requestResult.is4xx()){
                     report += "\n  Server response: " + requestResult.getResponse();

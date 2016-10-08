@@ -139,6 +139,7 @@ public class Trim{
         RequestResult result = null;
         BufferedReader reader = null;
         try{
+            long startTime = System.currentTimeMillis();
             //Execute the request and create the reader
             HttpResponse response = client.execute(request);
             reader = new BufferedReader(new InputStreamReader(response.getEntity().getContent()));
@@ -150,8 +151,10 @@ public class Trim{
                 stringBuilder.append(line);
             }
 
+            float timeSecs = (System.currentTimeMillis() - startTime)/1000f;
+
             //Create the result bundle
-            result = new RequestResult(response.getStatusLine().getStatusCode(), stringBuilder.toString());
+            result = new RequestResult(timeSecs, response.getStatusLine().getStatusCode(), stringBuilder.toString());
         }
         catch (IOException iox){
             iox.printStackTrace();
@@ -205,26 +208,38 @@ public class Trim{
      * @version 1.0.0
      */
     class RequestResult{
-        private int statusCode;
-        private String response;
+        private final float requestTime;
+        private final int statusCode;
+        private final String response;
 
 
         /**
          * Constructor. Call if the request failed.
          */
         private RequestResult(){
-            this(-1, "Request failed");
+            this(0F, -1, "Request failed");
         }
 
         /**
          * Constructor. Call if the request got through to the server.
          *
+         * @param requestTime the time that took to complete the request.
          * @param statusCode the status code of the request.
          * @param response the response to the request.
          */
-        private RequestResult(int statusCode, @NotNull String response){
+        private RequestResult(float requestTime, int statusCode, @NotNull String response){
+            this.requestTime = requestTime;
             this.statusCode = statusCode;
             this.response = response;
+        }
+
+        /**
+         * Request time getter.
+         *
+         * @return the time that took to complete the request.
+         */
+        float getRequestTime(){
+            return requestTime;
         }
 
         /**
