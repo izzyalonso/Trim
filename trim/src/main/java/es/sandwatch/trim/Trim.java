@@ -7,16 +7,11 @@ import org.apache.http.client.methods.HttpGet;
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-import org.json.JSONException;
-import org.json.JSONObject;
 
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 
 /**
@@ -93,14 +88,14 @@ public class Trim{
             //If successful
             if (result.is2xx()){
                 //Parse the response and create the usage map and the field list
-                Set<String> keys = getJsonAttributeSet(result.getResponse());
-                if (keys == null){
+                Parser.FieldNode keys = Parser.parseJson(result.getResponse());
+                if (!keys.isParsedObject()){
                     endpointReport.setResponseFormatError();
                 }
                 else {
                     //Create and populate the field list
-                    List<Parser.ClassField> fields = Parser.parseClass(endpoint.getModel());
-                    for (Parser.ClassField field:fields){
+                    List<Parser.FieldNode> fields = Parser.parseClass(endpoint.getModel());
+                    for (Parser.FieldNode field:fields){
                         //Determine if it exists in the API response
                         if (keys.contains(field.getName())){
                             endpointReport.addAttributeReport(field.getName(), true);
@@ -109,7 +104,7 @@ public class Trim{
                     }
 
                     //The rest of the fields in the keys set are not used in the model
-                    for (String key:keys){
+                    for (String key:keys.getChildrenNames()){
                         endpointReport.addAttributeReport(key, false);
                     }
                 }
@@ -175,29 +170,6 @@ public class Trim{
             result = new RequestResult();
         }
         return result;
-    }
-
-    /**
-     * Turns a string returned by an API endpoint into a Set of attributes.
-     *
-     * @param src the source string.
-     * @return the parsed set of attributes or null if src couldn't be interpreted.
-     */
-    private @Nullable Set<String> getJsonAttributeSet(String src){
-        Set<String> fieldSet = new HashSet<>();
-        try{
-            JSONObject object = new JSONObject(src);
-
-            Iterator<String> keys = object.keys();
-            while (keys.hasNext()){
-                fieldSet.add(keys.next());
-            }
-        }
-        catch (JSONException jx){
-            jx.printStackTrace();
-            return null;
-        }
-        return fieldSet;
     }
 
 

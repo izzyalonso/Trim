@@ -3,6 +3,8 @@ package es.sandwatch.trim;
 import org.apache.commons.lang3.ClassUtils;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import org.json.JSONException;
+import org.json.JSONObject;
 
 import java.lang.reflect.Field;
 import java.util.*;
@@ -18,13 +20,23 @@ class Parser{
     /**
      * Turns a class into a list of ClassFields
      *
-     * @param target the class to parse.
+     * @param src the class to parse.
      * @return the root node of the complete model hierarchy
      */
-    static @NotNull List<ClassField> parseClass(@NotNull Class<?> target){
-        List<ClassField> classFields = new ArrayList<>();
-        new Parser().parseClass(target, classFields);
+    static @NotNull List<FieldNode> parseClass(@NotNull Class<?> src){
+        List<FieldNode> classFields = new ArrayList<>();
+        new Parser().parseClass(src, classFields);
         return classFields;
+    }
+
+    /**
+     * Parses a JSON string into a FieldNode hierarchy.
+     *
+     * @param src the source string.
+     * @return a set of FieldNodes.
+     */
+    static @NotNull FieldNode parseJson(@NotNull String src){
+        return new FieldNode("root", new Parser().parseJsonInternal(src));
     }
 
 
@@ -46,15 +58,15 @@ class Parser{
     /**
      * Turns a class into a list of ClassFields
      *
-     * @param targetClass the class to parse.
+     * @param srcClass the class to parse.
      * @param targetList the root node of the model hierarchy
      */
-    private void parseClass(@NotNull Class<?> targetClass, @NotNull List<ClassField> targetList){
+    private void parseClass(@NotNull Class<?> srcClass, @NotNull List<FieldNode> targetList){
         //Do not parse java.lang.Object
-        if (!targetClass.equals(Object.class)){
-            seenClasses.add(targetClass);
+        if (!srcClass.equals(Object.class)){
+            seenClasses.add(srcClass);
             //For every declared field in the target
-            for (Field field:targetClass.getDeclaredFields()){
+            for (Field field:srcClass.getDeclaredFields()){
                 //Extract the serialized name of the field, annotation overrides field name
                 AttributeName annotation = field.getAnnotation(AttributeName.class);
                 String name;
@@ -64,7 +76,7 @@ class Parser{
                 else{
                     name = annotation.value();
                 }
-                List<ClassField> fieldClassFields = null;
+                List<FieldNode> fieldClassFields = null;
 
                 Class<?> fieldClass = field.getType();
                 if (shouldParseClass(fieldClass)){
@@ -72,13 +84,13 @@ class Parser{
                     parseClass(fieldClass, fieldClassFields);
                 }
 
-                //Add a new ClassField to the list
-                targetList.add(new ClassField(name, fieldClassFields));
+                //Add a new FieldNode to the list
+                targetList.add(new FieldNode(name, fieldClassFields));
             }
 
             //Parse superclasses as well
-            parseClass(targetClass.getSuperclass(), targetList);
-            seenClasses.remove(targetClass);
+            parseClass(srcClass.getSuperclass(), targetList);
+            seenClasses.remove(srcClass);
         }
     }
 
@@ -102,6 +114,39 @@ class Parser{
                 !seenClasses.contains(target);
     }
 
+    /**
+     * Parses a JSON string into a FieldNode hierarchy.
+     *
+     * @param src the source string.
+     * @return a set of FieldNodes or null if src was malformatted.
+     */
+    private @Nullable Set<FieldNode> parseJsonInternal(@NotNull String src){
+        Set<FieldNode> fieldSet = new HashSet<>();
+        try{
+            //Parse the object and get a key iterator
+            JSONObject object = new JSONObject(src);
+            Iterator<String> keys = object.keys();
+            //So long as there are values
+            while (keys.hasNext()){
+                //Extract the next key
+                String key = keys.next();
+                Set<FieldNode> objectFields = null;
+                Object unknown = object.get(key);
+                //If the next object is a nested JSON object, parse it
+                if (unknown instanceof JSONObject){
+                    objectFields = parseJsonInternal(unknown.toString());
+                }
+                //Add the node to the set
+                fieldSet.add(new FieldNode(key, objectFields));
+            }
+        }
+        catch (JSONException jx){
+            //Halt if an exception is raised
+            return null;
+        }
+        return fieldSet;
+    }
+
 
     /**
      * Represents an object in the field hierarchy.
@@ -109,20 +154,27 @@ class Parser{
      * @author Ismael Alonso
      * @version 1.0.0
      */
-    static class ClassField{
+    static class FieldNode{
         private String name;
-        private List<ClassField> classFields;
+        private Collection<FieldNode> children;
+        private Set<String> childrenNames;
 
 
         /**
          * Constructor.
          *
          * @param name the name of the field.
-         * @param classFields a list containing the object's fields
+         * @param children a list containing the object's fields
          */
-        private ClassField(@NotNull String name, @Nullable List<ClassField> classFields){
+        private FieldNode(@NotNull String name, @Nullable Collection<FieldNode> children){
             this.name = name;
-            this.classFields = classFields;
+            this.children = children;
+            if (children != null){
+                this.childrenNames = new HashSet<>();
+                for (FieldNode child:children){
+                    childrenNames.add(child.getName());
+                }
+            }
         }
 
         /**
@@ -140,7 +192,7 @@ class Parser{
          * @return true if it was, false otherwise.
          */
         boolean isParsedObject(){
-            return classFields == null;
+            return children != null;
         }
 
         /**
@@ -148,8 +200,36 @@ class Parser{
          *
          * @return the named list.
          */
-        @Nullable List<ClassField> getClassFields(){
-            return classFields;
+        @Nullable Collection<FieldNode> getChildren(){
+            return children;
+        }
+
+        /**
+         * Tells whether this node contains a child.
+         *
+         * @param childName the name of the child to be checked.
+         * @return true if it does, false otherwise.
+         */
+        boolean contains(String childName){
+            return childrenNames.contains(childName);
+        }
+
+        /**
+         * Removes a child a child.
+         *
+         * @param childName the name of the child to be removed.
+         */
+        void remove(String childName){
+            childrenNames.remove(childName);
+        }
+
+        /**
+         * Children name getter.
+         *
+         * @return the children name set.
+         */
+        Set<String> getChildrenNames(){
+            return childrenNames;
         }
 
         @Override
@@ -165,10 +245,10 @@ class Parser{
          */
         private String toString(String spacing){
             StringBuilder result = new StringBuilder();
-            result.append(spacing).append(name);
+            result.append("\n").append(spacing).append(name);
             if (isParsedObject()){
                 spacing += "  ";
-                for (ClassField field:classFields){
+                for (FieldNode field: children){
                     result.append(field.toString(spacing));
                 }
             }
