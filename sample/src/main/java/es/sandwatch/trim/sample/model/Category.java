@@ -1,6 +1,7 @@
 package es.sandwatch.trim.sample.model;
 
 import es.sandwatch.trim.AttributeName;
+import es.sandwatch.trim.Skip;
 
 /**
  * TNData's Category model.
@@ -10,6 +11,7 @@ public class Category{
     private long id;
 
     @AttributeName("title")
+    @Skip
     private String title;
     @AttributeName("description")
     private String description;

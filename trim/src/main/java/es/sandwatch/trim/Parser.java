@@ -67,25 +67,27 @@ class Parser{
             seenClasses.add(srcClass);
             //For every declared field in the target
             for (Field field:srcClass.getDeclaredFields()){
-                //Extract the serialized name of the field, annotation overrides field name
-                AttributeName annotation = field.getAnnotation(AttributeName.class);
-                String name;
-                if (annotation == null){
-                    name = field.getName();
-                }
-                else{
-                    name = annotation.value();
-                }
-                List<FieldNode> fieldClassFields = null;
+                if (field.getAnnotation(Skip.class) == null){
+                    //Extract the serialized name of the field, annotation overrides field name
+                    AttributeName annotation = field.getAnnotation(AttributeName.class);
+                    String name;
+                    if (annotation == null){
+                        name = field.getName();
+                    }
+                    else{
+                        name = annotation.value();
+                    }
+                    List<FieldNode> fieldClassFields = null;
 
-                Class<?> fieldClass = field.getType();
-                if (shouldParseClass(fieldClass)){
-                    fieldClassFields = new ArrayList<>();
-                    parseClass(fieldClass, fieldClassFields);
-                }
+                    Class<?> fieldClass = field.getType();
+                    if (shouldParseClass(fieldClass)){
+                        fieldClassFields = new ArrayList<>();
+                        parseClass(fieldClass, fieldClassFields);
+                    }
 
-                //Add a new FieldNode to the list
-                targetList.add(new FieldNode(name, fieldClassFields));
+                    //Add a new FieldNode to the list
+                    targetList.add(new FieldNode(name, fieldClassFields));
+                }
             }
 
             //Parse superclasses as well
