@@ -52,7 +52,6 @@ class Parser{
     private void parseClass(@NotNull Class<?> targetClass, @NotNull List<ClassField> targetList){
         //Do not parse java.lang.Object
         if (!targetClass.equals(Object.class)){
-            System.out.println(targetClass);
             seenClasses.add(targetClass);
             //For every declared field in the target
             for (Field field:targetClass.getDeclaredFields()){
@@ -68,13 +67,6 @@ class Parser{
                 List<ClassField> fieldClassFields = null;
 
                 Class<?> fieldClass = field.getType();
-                System.out.println("  " + fieldClass);
-                //If the field is a class other than:
-                //  - A wrapper
-                //  - A primitive
-                //  - A String
-                //  - A Collection
-                //  - A class already seen in the current hierarchy branch
                 if (shouldParseClass(fieldClass)){
                     fieldClassFields = new ArrayList<>();
                     parseClass(fieldClass, fieldClassFields);
@@ -90,9 +82,22 @@ class Parser{
         }
     }
 
+    /**
+     * Tells whether the target should be parsed and added to the hierarchy.
+     *
+     * Things that should NOT be parsed:
+     *   - Primitives
+     *   - Primitive wrappers
+     *   - CharSequences
+     *   - Collections
+     *   - Classes already seen in the current hierarchy branch
+     *
+     * @param target the class type to be checked.
+     * @return true if it should, false otherwise.
+     */
     private boolean shouldParseClass(Class<?> target){
         return !ClassUtils.isPrimitiveOrWrapper(target) &&
-                !(target == String.class) &&
+                !CharSequence.class.isAssignableFrom(target)  &&
                 !Collection.class.isAssignableFrom(target) &&
                 !seenClasses.contains(target);
     }
@@ -130,11 +135,11 @@ class Parser{
         }
 
         /**
-         * Tells whether this field is a relevant object.
+         * Tells whether this field was parsed.
          *
-         * @return true if it is, false otherwise.
+         * @return true if it was, false otherwise.
          */
-        boolean isRelevantObject(){
+        boolean isParsedObject(){
             return classFields == null;
         }
 
@@ -161,7 +166,7 @@ class Parser{
         private String toString(String spacing){
             StringBuilder result = new StringBuilder();
             result.append(spacing).append(name);
-            if (isRelevantObject()){
+            if (isParsedObject()){
                 spacing += "  ";
                 for (ClassField field:classFields){
                     result.append(field.toString(spacing));
