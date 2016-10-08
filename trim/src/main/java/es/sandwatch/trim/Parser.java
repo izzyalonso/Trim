@@ -35,8 +35,8 @@ class Parser{
      * @param src the source string.
      * @return a set of FieldNodes.
      */
-    static @Nullable Set<FieldNode> parseJson(@NotNull String src){
-        return new Parser().parseJsonInternal(src);
+    static @NotNull FieldNode parseJson(@NotNull String src){
+        return new FieldNode("root", new Parser().parseJsonInternal(src));
     }
 
 
@@ -156,18 +156,25 @@ class Parser{
      */
     static class FieldNode{
         private String name;
-        private Collection<FieldNode> fieldNodes;
+        private Collection<FieldNode> children;
+        private Set<String> childrenNames;
 
 
         /**
          * Constructor.
          *
          * @param name the name of the field.
-         * @param fieldNodes a list containing the object's fields
+         * @param children a list containing the object's fields
          */
-        private FieldNode(@NotNull String name, @Nullable Collection<FieldNode> fieldNodes){
+        private FieldNode(@NotNull String name, @Nullable Collection<FieldNode> children){
             this.name = name;
-            this.fieldNodes = fieldNodes;
+            this.children = children;
+            if (children != null){
+                this.childrenNames = new HashSet<>();
+                for (FieldNode child:children){
+                    childrenNames.add(child.getName());
+                }
+            }
         }
 
         /**
@@ -185,7 +192,7 @@ class Parser{
          * @return true if it was, false otherwise.
          */
         boolean isParsedObject(){
-            return fieldNodes != null;
+            return children != null;
         }
 
         /**
@@ -193,8 +200,36 @@ class Parser{
          *
          * @return the named list.
          */
-        @Nullable Collection<FieldNode> getFieldNodes(){
-            return fieldNodes;
+        @Nullable Collection<FieldNode> getChildren(){
+            return children;
+        }
+
+        /**
+         * Tells whether this node contains a child.
+         *
+         * @param childName the name of the child to be checked.
+         * @return true if it does, false otherwise.
+         */
+        boolean contains(String childName){
+            return childrenNames.contains(childName);
+        }
+
+        /**
+         * Removes a child a child.
+         *
+         * @param childName the name of the child to be removed.
+         */
+        void remove(String childName){
+            childrenNames.remove(childName);
+        }
+
+        /**
+         * Children name getter.
+         *
+         * @return the children name set.
+         */
+        Set<String> getChildrenNames(){
+            return childrenNames;
         }
 
         @Override
@@ -213,7 +248,7 @@ class Parser{
             result.append("\n").append(spacing).append(name);
             if (isParsedObject()){
                 spacing += "  ";
-                for (FieldNode field:fieldNodes){
+                for (FieldNode field: children){
                     result.append(field.toString(spacing));
                 }
             }
