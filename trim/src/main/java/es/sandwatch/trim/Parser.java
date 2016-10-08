@@ -5,10 +5,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.lang.reflect.Field;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 
 /**
@@ -55,6 +52,8 @@ class Parser{
     private void parseClass(@NotNull Class<?> targetClass, @NotNull List<ClassField> targetList){
         //Do not parse java.lang.Object
         if (!targetClass.equals(Object.class)){
+            System.out.println(targetClass);
+            seenClasses.add(targetClass);
             //For every declared field in the target
             for (Field field:targetClass.getDeclaredFields()){
                 //Extract the serialized name of the field, annotation overrides field name
@@ -68,17 +67,17 @@ class Parser{
                 }
                 List<ClassField> fieldClassFields = null;
 
-                Class<?> fieldClass = field.getDeclaringClass();
-                //TODO Collection check
+                Class<?> fieldClass = field.getType();
+                System.out.println("  " + fieldClass);
                 //If the field is a class other than:
                 //  - A wrapper
                 //  - A primitive
+                //  - A String
+                //  - A Collection
                 //  - A class already seen in the current hierarchy branch
-                if (!ClassUtils.isPrimitiveOrWrapper(fieldClass) && !seenClasses.contains(fieldClass)){
-                    seenClasses.add(fieldClass);
+                if (shouldParseClass(fieldClass)){
                     fieldClassFields = new ArrayList<>();
                     parseClass(fieldClass, fieldClassFields);
-                    seenClasses.remove(fieldClass);
                 }
 
                 //Add a new ClassField to the list
@@ -87,7 +86,15 @@ class Parser{
 
             //Parse superclasses as well
             parseClass(targetClass.getSuperclass(), targetList);
+            seenClasses.remove(targetClass);
         }
+    }
+
+    private boolean shouldParseClass(Class<?> target){
+        return !ClassUtils.isPrimitiveOrWrapper(target) &&
+                !(target == String.class) &&
+                !Collection.class.isAssignableFrom(target) &&
+                !seenClasses.contains(target);
     }
 
 
@@ -127,7 +134,7 @@ class Parser{
          *
          * @return true if it is, false otherwise.
          */
-        boolean isObject(){
+        boolean isRelevantObject(){
             return classFields == null;
         }
 
@@ -154,7 +161,7 @@ class Parser{
         private String toString(String spacing){
             StringBuilder result = new StringBuilder();
             result.append(spacing).append(name);
-            if (isObject()){
+            if (isRelevantObject()){
                 spacing += "  ";
                 for (ClassField field:classFields){
                     result.append(field.toString(spacing));
