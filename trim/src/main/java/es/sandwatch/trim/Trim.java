@@ -40,6 +40,7 @@ public class Trim{
      * @return the report object.
      */
     public static @NotNull Report run(@NotNull ApiSpecification specification, @Nullable ProgressListener listener){
+        specification.lock();
         Trim trim = new Trim(specification, listener);
         return trim.run();
     }
