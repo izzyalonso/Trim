@@ -1,11 +1,14 @@
 package es.sandwatch.trim.sample.model;
 
-import es.sandwatch.trim.AttributeName;
-import es.sandwatch.trim.Skip;
+import es.sandwatch.trim.annotation.AttributeName;
+import es.sandwatch.trim.annotation.Endpoint;
+import es.sandwatch.trim.annotation.Skip;
+
 
 /**
  * TNData's Category model.
  */
+@Endpoint("http://app.tndata.org/api/categories/23/")
 public class Category{
     @AttributeName("id")
     private long id;

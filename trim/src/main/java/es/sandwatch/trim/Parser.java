@@ -1,5 +1,8 @@
 package es.sandwatch.trim;
 
+import es.sandwatch.trim.annotation.AttributeName;
+import es.sandwatch.trim.annotation.CollectionGenericType;
+import es.sandwatch.trim.annotation.Skip;
 import org.apache.commons.lang3.ClassUtils;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;

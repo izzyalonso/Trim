@@ -15,9 +15,9 @@ import java.util.Map;
  */
 public class ApiSpecification{
     /**
-     * The list of endpoints in the API.
+     * The list of models to be inspected.
      */
-    private List<EndpointLegacy> endpoints;
+    private List<Class<?>> models;
 
     /**
      * The headers that apply to all endpoints in the API
@@ -29,18 +29,18 @@ public class ApiSpecification{
      * Constructor.
      */
     public ApiSpecification(){
-        endpoints = new ArrayList<>();
+        models = new ArrayList<>();
         headers = new HashMap<>();
     }
 
     /**
-     * Adds an endpoint to the specification.
+     * Adds a model to the specification.
      *
-     * @param endpoint the endpoint to be added.
+     * @param model the model to be added.
      * @return this object.
      */
-    public ApiSpecification addEndpoint(@NotNull EndpointLegacy endpoint){
-        endpoints.add(endpoint);
+    public ApiSpecification addModel(@NotNull Class<?> model){
+        models.add(model);
         return this;
     }
 
@@ -57,12 +57,12 @@ public class ApiSpecification{
     }
 
     /**
-     * EndpointLegacy list getter.
+     * Model list getter.
      *
-     * @return the list of endpoints in this specification.
+     * @return the list of models in this specification.
      */
-    @NotNull List<EndpointLegacy> getEndpoints(){
-        return endpoints;
+    @NotNull List<Class<?>> getModels(){
+        return models;
     }
 
     /**

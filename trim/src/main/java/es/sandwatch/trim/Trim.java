@@ -1,5 +1,6 @@
 package es.sandwatch.trim;
 
+import es.sandwatch.trim.annotation.Endpoint;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpGet;
@@ -66,10 +67,16 @@ public class Trim{
      * @return the report object.
      */
     private @NotNull Report run(){
+        List<EndpointLegacy> endpoints = new ArrayList<>();
         //Add all generic headers to all endpoints
-        for (EndpointLegacy endpoint: specification.getEndpoints()){
-            for (String header: specification.getHeaders().keySet()){
-                endpoint.addHeader(header, specification.getHeaders().get(header));
+        for (Class<?> model:specification.getModels()){
+            Endpoint endpointAnnotation = model.getDeclaredAnnotation(Endpoint.class);
+            if (endpointAnnotation != null){
+                EndpointLegacy endpoint = new EndpointLegacy(endpointAnnotation.value(), model);
+                for (String header : specification.getHeaders().keySet()){
+                    endpoint.addHeader(header, specification.getHeaders().get(header));
+                }
+                endpoints.add(endpoint);
             }
         }
 
@@ -81,7 +88,7 @@ public class Trim{
         int completed = 0;
 
         //Execute the requests to endpoints
-        for (EndpointLegacy endpoint: specification.getEndpoints()){
+        for (EndpointLegacy endpoint:endpoints){
             RequestResult result = getEndpointData(endpoint);
             Report.EndpointReport endpointReport = report.addEndpointReport(endpoint, result);
 

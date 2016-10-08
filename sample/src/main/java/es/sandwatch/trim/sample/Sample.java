@@ -18,8 +18,8 @@ import org.jetbrains.annotations.NotNull;
 public class Sample implements Trim.ProgressListener{
     private Sample(){
         ApiSpecification spec = new ApiSpecification()
-                .addEndpoint(new EndpointLegacy("http://app.tndata.org/api/categories/23/", Category.class))
-                .addEndpoint(new EndpointLegacy("http://app.tndata.org/api/goals/82/", Goal.class));
+                .addModel(Category.class)
+                .addModel(Goal.class);
         Report report = Trim.run(spec, this);
         System.out.println(report);
     }
