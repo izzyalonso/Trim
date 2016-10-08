@@ -1,4 +1,4 @@
-package es.sandwatch.trim;
+package es.sandwatch.trim.annotation;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
@@ -7,13 +7,13 @@ import java.lang.annotation.Target;
 
 
 /**
- * Tells Trim to not take into consideration a class' attribute.
+ * Interface used to mapped model fields to API attributes.
  *
  * @author Ismael Alonso
  * @version 1.0.0
  */
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.FIELD)
-public @interface Skip{
-
+public @interface AttributeName{
+    String value();
 }

@@ -1,7 +1,6 @@
 package es.sandwatch.trim.sample;
 
 import es.sandwatch.trim.ApiSpecification;
-import es.sandwatch.trim.Endpoint;
 import es.sandwatch.trim.Report;
 import es.sandwatch.trim.Trim;
 import es.sandwatch.trim.sample.model.Category;
@@ -18,15 +17,15 @@ import org.jetbrains.annotations.NotNull;
 public class Sample implements Trim.ProgressListener{
     private Sample(){
         ApiSpecification spec = new ApiSpecification()
-                .addEndpoint(new Endpoint("http://app.tndata.org/api/categories/23/", Category.class))
-                .addEndpoint(new Endpoint("http://app.tndata.org/api/goals/82/", Goal.class));
+                .addModel(Category.class)
+                .addModel(Goal.class);
         Report report = Trim.run(spec, this);
         System.out.println(report);
     }
 
     @Override
-    public void onEndpointReportComplete(@NotNull Endpoint endpoint, int completed){
-        System.out.println(endpoint + ", " + completed + " completed so far.");
+    public void onEndpointReportComplete(@NotNull Class<?> model, int completed){
+        System.out.println(model + ", " + completed + " completed so far.");
     }
 
 

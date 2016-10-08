@@ -28,13 +28,13 @@ public class Report{
     /**
      * Creates an instance of EndpointReport and adds it to the list.
      *
-     * @param endpoint the endpoint associated to the report.
-     * @param requestResult the result of the request to the above endpoint.
+     * @param model the model associated to the report.
+     * @param requestResult the result of the request to the above model.
      * @return the report object.
      */
     @NotNull
-    EndpointReport addEndpointReport(@NotNull Endpoint endpoint, @NotNull Trim.RequestResult requestResult){
-        EndpointReport report = new EndpointReport(endpoint, requestResult);
+    EndpointReport addEndpointReport(@NotNull Class<?> model, @NotNull Fetcher.RequestResult requestResult){
+        EndpointReport report = new EndpointReport(model, requestResult);
         endpointReports.add(report);
         return report;
     }
@@ -56,14 +56,14 @@ public class Report{
 
 
     /**
-     * Report for a single endpoint.
+     * Report for a single model.
      *
      * @author Ismael Alonso
      * @version 1.0.0
      */
     class EndpointReport{
-        private Endpoint endpoint;
-        private Trim.RequestResult requestResult;
+        private Class<?> model;
+        private Fetcher.RequestResult requestResult;
         private boolean responseFormatError;
         private Map<String, Boolean> attributeReports;
 
@@ -71,11 +71,11 @@ public class Report{
         /**
          * Constructor.
          *
-         * @param endpoint the endpoint associated to the report.
-         * @param requestResult the result of the request to the above endpoint.
+         * @param model the model associated to the report.
+         * @param requestResult the result of the request to the above model.
          */
-        private EndpointReport(@NotNull Endpoint endpoint, @NotNull Trim.RequestResult requestResult){
-            this.endpoint = endpoint;
+        private EndpointReport(@NotNull Class<?> model, @NotNull Fetcher.RequestResult requestResult){
+            this.model = model;
             this.requestResult = requestResult;
             this.responseFormatError = false;
             this.attributeReports = new HashMap<>();
@@ -100,7 +100,7 @@ public class Report{
 
         @Override
         public String toString(){
-            StringBuilder report = new StringBuilder().append(endpoint.toString());
+            StringBuilder report = new StringBuilder().append(model.toString());
             if (requestResult.requestFailed()){
                 report.append("\n  The request could not be performed.");
             }

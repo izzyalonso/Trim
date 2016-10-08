@@ -7,6 +7,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+
 /**
  * Contains all the relevant information about an API, namely endpoints and headers.
  *
@@ -15,32 +16,40 @@ import java.util.Map;
  */
 public class ApiSpecification{
     /**
-     * The list of endpoints in the API.
+     * The list of models to be inspected.
      */
-    private List<Endpoint> endpoints;
+    private List<Class<?>> models;
 
     /**
-     * The headers that apply to all endpoints in the API
+     * The headers that apply to all endpoints in the API.
      */
     private Map<String, String> headers;
+
+    /**
+     * Control flag. Indicates whether the user has run this specification, if so, prevents him from modifying it.
+     */
+    private boolean locked;
 
 
     /**
      * Constructor.
      */
     public ApiSpecification(){
-        endpoints = new ArrayList<>();
+        models = new ArrayList<>();
         headers = new HashMap<>();
+        locked = false;
     }
 
     /**
-     * Adds an endpoint to the specification.
+     * Adds a model to the specification.
      *
-     * @param endpoint the endpoint to be added.
+     * @param model the model to be added.
      * @return this object.
      */
-    public ApiSpecification addEndpoint(@NotNull Endpoint endpoint){
-        endpoints.add(endpoint);
+    public ApiSpecification addModel(@NotNull Class<?> model){
+        if (!locked){
+            models.add(model);
+        }
         return this;
     }
 
@@ -52,17 +61,26 @@ public class ApiSpecification{
      * @return this object.
      */
     public ApiSpecification addHeader(@NotNull String header, @NotNull String value){
-        headers.put(header, value);
+        if (!locked){
+            headers.put(header, value);
+        }
         return this;
     }
 
     /**
-     * Endpoint list getter.
-     *
-     * @return the list of endpoints in this specification.
+     * Locks the specification.
      */
-    @NotNull List<Endpoint> getEndpoints(){
-        return endpoints;
+    void lock(){
+        locked = true;
+    }
+
+    /**
+     * Model list getter.
+     *
+     * @return the list of models in this specification.
+     */
+    @NotNull List<Class<?>> getModels(){
+        return models;
     }
 
     /**
