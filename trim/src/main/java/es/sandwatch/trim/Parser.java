@@ -139,5 +139,28 @@ class Parser{
         @Nullable List<ClassField> getClassFields(){
             return classFields;
         }
+
+        @Override
+        public String toString(){
+            return toString("");
+        }
+
+        /**
+         * String generation method with spacing to make hierarchy clear when printing.
+         *
+         * @param spacing the spacing to be included before field names.
+         * @return the string representing this hierarchy.
+         */
+        private String toString(String spacing){
+            StringBuilder result = new StringBuilder();
+            result.append(spacing).append(name);
+            if (isObject()){
+                spacing += "  ";
+                for (ClassField field:classFields){
+                    result.append(field.toString(spacing));
+                }
+            }
+            return result.toString();
+        }
     }
 }
