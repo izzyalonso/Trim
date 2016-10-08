@@ -7,13 +7,15 @@ import java.lang.annotation.Target;
 
 
 /**
- * Tells Trim to not take into consideration a class' attribute.
+ * Tells trim the generic type of a class attribute mapping to an array. This is necessary because
+ * of type erasure. This annotation will only be considered in objects whose type is a subclass of
+ * Collection.
  *
  * @author Ismael Alonso
  * @version 1.0.0
  */
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.FIELD)
-public @interface Skip{
-
+public @interface CollectionGenericType{
+    Class<?> value();
 }

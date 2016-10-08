@@ -41,17 +41,17 @@ public class Report{
 
     @Override
     public String toString(){
-        String report = "";
+        StringBuilder report = new StringBuilder();
         if (endpointReports.isEmpty()){
-            report += "Nothing to report.";
+            report.append("Nothing to report.");
         }
         else{
-            report += "Trim report, " + endpointReports.size() + " endpoints:";
+            report.append("Trim report, ").append(endpointReports.size()).append(" endpoints:");
             for (EndpointReport endpointReport:endpointReports){
-                report += "\n\n" + endpointReport;
+                report.append("\n\n").append(endpointReport);
             }
         }
-        return report;
+        return report.toString();
     }
 
 
@@ -100,26 +100,27 @@ public class Report{
 
         @Override
         public String toString(){
-            String report = endpoint.toString();
+            StringBuilder report = new StringBuilder().append(endpoint.toString());
             if (requestResult.requestFailed()){
-                report += "\n  The request could not be performed.";
+                report.append("\n  The request could not be performed.");
             }
             else{
-                report += "\n  Request time: " + requestResult.getRequestTime() + "s";
-                report += "\n  Request status code: " + requestResult.getStatusCode();
+                report.append("\n  Request time: ").append(requestResult.getRequestTime()).append("s");
+                report.append("\n  Request status code: ").append(requestResult.getStatusCode());
                 if (requestResult.is4xx()){
-                    report += "\n  Server response: " + requestResult.getResponse();
+                    report.append("\n  Server response: ").append(requestResult.getResponse());
                 }
                 else if (responseFormatError){
-                    report += "\n  The format of the response was unknown.";
+                    report.append("\n  The format of the response was unknown.");
                 }
                 else{
                     for (Map.Entry<String, Boolean> entry:attributeReports.entrySet()){
-                        report += "\n    " + entry.getKey() + ": " + (entry.getValue() ? "used" : "not used");
+                        report.append("\n    ").append(entry.getKey()).append(": ")
+                                .append(entry.getValue() ? "used" : "not used");
                     }
                 }
             }
-            return report;
+            return report.toString();
         }
     }
 }
