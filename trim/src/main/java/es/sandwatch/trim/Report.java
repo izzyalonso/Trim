@@ -123,4 +123,69 @@ public class Report{
             return report.toString();
         }
     }
+    
+
+    /**
+     * Report for a single attribute.
+     *
+     * @author Ismael Alonso
+     * @version 1.0.0
+     */
+    class AttributeReport{
+        private String name;
+        private boolean used;
+        private JsonType apiType;
+        private JsonType modelType;
+
+
+        /**
+         * Constructor.
+         *
+         * @param name the name of the attribute.
+         */
+        AttributeReport(String name){
+            this.name = name;
+        }
+
+        /**
+         * Sets attribute usage information.
+         *
+         * @param used true if it is used, false otherwise.
+         * @return this object.
+         */
+        AttributeReport setUsed(boolean used){
+            this.used = used;
+            return this;
+        }
+
+        /**
+         * Sets type information.
+         *
+         * @param apiType the type found in the API endpoint result.
+         * @param modelType the type found in the model.
+         * @return this object
+         */
+        AttributeReport setTypes(JsonType apiType, JsonType modelType){
+            this.apiType = apiType;
+            this.modelType = modelType;
+            return this;
+        }
+
+        @Override
+        public String toString() {
+            StringBuilder result = new StringBuilder().append(name).append(": ").append(used ? "used" : "unused");
+            if (used){
+                result.append(", ");
+                if (apiType == modelType){
+                    result.append("types match");
+                }
+                else{
+                    result.append("types mismatch (")
+                            .append(apiType).append(" in endpoint, ")
+                            .append(modelType).append(" in model)");
+                }
+            }
+            return result.toString();
+        }
+    }
 }
