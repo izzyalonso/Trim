@@ -13,7 +13,7 @@ import java.util.Collection;
  * @version 1.0.0
  */
 enum JsonType{
-    NUMBER, STRING, BOOLEAN, ARRAY, OBJECT, NULL, NONE;
+    NUMBER_INT, NUMBER_FLOAT, STRING, BOOLEAN, ARRAY, OBJECT, NULL, NONE;
 
 
     /**
@@ -30,10 +30,10 @@ enum JsonType{
             return BOOLEAN;
         }
         if (object instanceof Integer || object instanceof Long){
-            return NUMBER;
+            return NUMBER_INT;
         }
         if (object instanceof Float || object instanceof Double){
-            return NUMBER;
+            return NUMBER_FLOAT;
         }
         if (object instanceof String){
             return STRING;
@@ -58,16 +58,16 @@ enum JsonType{
             return BOOLEAN;
         }
         if (type.equals(Integer.class) || type.equals(int.class)){
-            return NUMBER;
+            return NUMBER_INT;
         }
         if (type.equals(Long.class) || type.equals(long.class)){
-            return NUMBER;
+            return NUMBER_INT;
         }
         if (type.equals(Float.class) || type.equals(float.class)){
-            return NUMBER;
+            return NUMBER_FLOAT;
         }
         if (type.equals(Double.class) || type.equals(double.class)){
-            return NUMBER;
+            return NUMBER_FLOAT;
         }
         if (type.equals(String.class)){
             return STRING;
@@ -76,5 +76,32 @@ enum JsonType{
             return ARRAY;
         }
         return OBJECT;
+    }
+
+    @Override
+    public String toString(){
+        switch (this){
+            case NUMBER_INT:
+                return "Number (int)";
+
+            case NUMBER_FLOAT:
+                return "Number (float)";
+
+            case STRING:
+                return "String";
+
+            case BOOLEAN:
+                return "Boolean";
+
+            case ARRAY:
+                return "Array";
+
+            case OBJECT:
+                return "Object";
+
+            case NULL:
+                return "Null";
+        }
+        return "None";
     }
 }

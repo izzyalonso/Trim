@@ -74,7 +74,7 @@ public class Trim{
             //If successful
             if (result.is2xx()){
                 //Parse the response and create the usage map and the field list
-                Parser.FieldNode<Parser.JsonType> keys = Parser.parseJson(result.getResponse());
+                Parser.FieldNode<JsonType> keys = Parser.parseJson(result.getResponse());
                 if (!keys.isParsedObject()){
                     endpointReport.setResponseFormatError();
                 }
