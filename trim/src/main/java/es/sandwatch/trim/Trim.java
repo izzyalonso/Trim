@@ -105,10 +105,7 @@ public class Trim{
     }
 
 
-
-
-
-    /**
+    /**c
      * Interface used to listen to progress updates from Trim.
      *
      * @author Ismael Alonso

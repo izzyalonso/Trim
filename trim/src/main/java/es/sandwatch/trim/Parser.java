@@ -145,7 +145,7 @@ class Parser{
                 String key = keys.next();
                 Set<FieldNode<JsonType>> objectFields = null;
                 Object unknown = object.get(key);
-                JsonType type = getJsonTypeOf(unknown);
+                JsonType type = JsonType.getTypeOf(unknown);
                 //If the next object is a nested JSON object, parse it
                 if (type == JsonType.OBJECT){
                     objectFields = parseJsonInternal(unknown.toString());
@@ -180,7 +180,7 @@ class Parser{
             //Get only the first item in the array, let's assume all items are of the same type
             //TODO? Java is statically typed though
             Object unknown = array.get(0);
-            JsonType type = getJsonTypeOf(unknown);
+            JsonType type = JsonType.getTypeOf(unknown);
             if (type == JsonType.OBJECT){
                 objectFields = parseJsonInternal(unknown.toString());
             }
@@ -190,37 +190,6 @@ class Parser{
             set.add(new FieldNode<>(type, "", objectFields));
         }
         return set;
-    }
-
-    /**
-     * Gets the json type of an object returned by JSONObject.get().
-     *
-     * @param unknown the object to be evaluated.
-     * @return its JsonType.
-     */
-    private @NotNull JsonType getJsonTypeOf(@NotNull Object unknown){
-        if (JSONObject.NULL.equals(unknown)){
-            return JsonType.NULL;
-        }
-        if (unknown instanceof Boolean){
-            return JsonType.BOOLEAN;
-        }
-        if (unknown instanceof Integer || unknown instanceof Long){
-            return JsonType.NUMBER;
-        }
-        if (unknown instanceof Float || unknown instanceof Double){
-            return JsonType.NUMBER;
-        }
-        if (unknown instanceof String){
-            return JsonType.STRING;
-        }
-        if (unknown instanceof JSONObject){
-            return JsonType.OBJECT;
-        }
-        if (unknown instanceof JSONArray){
-            return JsonType.ARRAY;
-        }
-        return JsonType.NONE;
     }
 
 
@@ -345,16 +314,5 @@ class Parser{
             }
             return result.toString();
         }
-    }
-
-
-    /**
-     * Data types supported by JSON.
-     *
-     * @author Ismael Alonso
-     * @version 1.0.0
-     */
-    enum JsonType{
-        NUMBER, STRING, BOOLEAN, ARRAY, OBJECT, NULL, NONE
     }
 }
