@@ -74,24 +74,31 @@ public class Trim{
             //If successful
             if (result.is2xx()){
                 //Parse the response and create the usage map and the field list
-                Parser.FieldNode<JsonType> keys = Parser.parseJson(result.getResponse());
-                if (!keys.isParsedObject()){
+                Parser.FieldNode<JsonType> endpointObject = Parser.parseJson(result.getResponse());
+                if (!endpointObject.isParsedObject()){
                     endpointReport.setResponseFormatError();
                 }
                 else {
                     //Create and populate the field list
                     List<Parser.FieldNode<Field>> fields = Parser.parseClass(model);
-                    for (Parser.FieldNode field:fields){
+                    for (Parser.FieldNode<Field> field:fields){
                         //Determine if it exists in the API response
-                        if (keys.contains(field.getName())){
-                            endpointReport.addAttributeReport(field.getName(), true);
-                            keys.remove(field.getName());
+                        if (endpointObject.contains(field.getName())){
+                            JsonType apiType = endpointObject.get(field.getName()).getPayload();
+                            JsonType modelType = JsonType.getTypeOf(field.getPayload().getType());
+                            Report.AttributeReport attributeReport = new Report.AttributeReport(field.getName())
+                                    .setUsed(true)
+                                    .setTypes(apiType, modelType);
+                            endpointReport.addAttributeReport(attributeReport);
+                            endpointObject.remove(field.getName());
                         }
                     }
 
                     //The rest of the fields in the keys set are not used in the model
-                    for (String key:keys.getChildrenNames()){
-                        endpointReport.addAttributeReport(key, false);
+                    for (Parser.FieldNode key:endpointObject.getChildren().values()){
+                        Report.AttributeReport attributeReport = new Report.AttributeReport(key.getName())
+                                .setUsed(false);
+                        endpointReport.addAttributeReport(attributeReport);
                     }
                 }
             }
@@ -105,7 +112,7 @@ public class Trim{
     }
 
 
-    /**c
+    /**
      * Interface used to listen to progress updates from Trim.
      *
      * @author Ismael Alonso

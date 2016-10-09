@@ -202,8 +202,7 @@ class Parser{
     static class FieldNode<T>{
         private T payload;
         private String name;
-        private Collection<FieldNode<T>> children;
-        private Set<String> childrenNames;
+        private Map<String, FieldNode<T>> children;
 
 
         /**
@@ -215,11 +214,10 @@ class Parser{
         private FieldNode(@NotNull T payload, @NotNull String name, @Nullable Collection<FieldNode<T>> children){
             this.payload = payload;
             this.name = name;
-            this.children = children;
             if (children != null){
-                this.childrenNames = new HashSet<>();
-                for (FieldNode child:children){
-                    childrenNames.add(child.getName());
+                this.children = new HashMap<>();
+                for (FieldNode<T> child:children){
+                    this.children.put(child.getName(), child);
                 }
             }
         }
@@ -252,11 +250,11 @@ class Parser{
         }
 
         /**
-         * Getter for the list of object's fields, if any.
+         * Children getter.
          *
-         * @return the named list.
+         * @return the children map.
          */
-        @Nullable Collection<FieldNode<T>> getChildren(){
+        Map<String, FieldNode<T>> getChildren(){
             return children;
         }
 
@@ -267,7 +265,11 @@ class Parser{
          * @return true if it does, false otherwise.
          */
         boolean contains(String childName){
-            return childrenNames.contains(childName);
+            return children.containsKey(childName);
+        }
+
+        FieldNode<T> get(String childName){
+            return children.get(childName);
         }
 
         /**
@@ -276,16 +278,7 @@ class Parser{
          * @param childName the name of the child to be removed.
          */
         void remove(String childName){
-            childrenNames.remove(childName);
-        }
-
-        /**
-         * Children name getter.
-         *
-         * @return the children name set.
-         */
-        Set<String> getChildrenNames(){
-            return childrenNames;
+            children.remove(childName);
         }
 
         @Override
@@ -308,8 +301,8 @@ class Parser{
             result.append(name);
             if (isParsedObject()){
                 spacing += "  ";
-                for (FieldNode field: children){
-                    result.append(field.toString(spacing));
+                for (FieldNode<T> node: children.values()){
+                    result.append(node.toString(spacing));
                 }
             }
             return result.toString();

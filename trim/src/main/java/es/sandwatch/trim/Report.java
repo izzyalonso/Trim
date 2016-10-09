@@ -3,9 +3,7 @@ package es.sandwatch.trim;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 
 /**
@@ -65,7 +63,7 @@ public class Report{
         private Class<?> model;
         private Fetcher.RequestResult requestResult;
         private boolean responseFormatError;
-        private Map<String, Boolean> attributeReports;
+        private List<AttributeReport> attributeReports;
 
 
         /**
@@ -78,7 +76,7 @@ public class Report{
             this.model = model;
             this.requestResult = requestResult;
             this.responseFormatError = false;
-            this.attributeReports = new HashMap<>();
+            this.attributeReports = new ArrayList<>();
         }
 
         /**
@@ -91,11 +89,10 @@ public class Report{
         /**
          * Adds information about attribute usage to the report.
          *
-         * @param attribute the relevant attribute.
-         * @param used whether the model uses it.
+         * @param attributeReport an attribute report.
          */
-        void addAttributeReport(@NotNull String attribute, boolean used){
-            attributeReports.put(attribute, used);
+        void addAttributeReport(@NotNull AttributeReport attributeReport){
+            attributeReports.add(attributeReport);
         }
 
         @Override
@@ -114,16 +111,15 @@ public class Report{
                     report.append("\n  The format of the response was unknown.");
                 }
                 else{
-                    for (Map.Entry<String, Boolean> entry:attributeReports.entrySet()){
-                        report.append("\n    ").append(entry.getKey()).append(": ")
-                                .append(entry.getValue() ? "used" : "not used");
+                    for (AttributeReport attributeReport:attributeReports){
+                        report.append("\n    ").append(attributeReport);
                     }
                 }
             }
             return report.toString();
         }
     }
-    
+
 
     /**
      * Report for a single attribute.
@@ -131,7 +127,7 @@ public class Report{
      * @author Ismael Alonso
      * @version 1.0.0
      */
-    class AttributeReport{
+    static class AttributeReport{
         private String name;
         private boolean used;
         private JsonType apiType;
@@ -145,6 +141,9 @@ public class Report{
          */
         AttributeReport(String name){
             this.name = name;
+            this.used = false;
+            this.apiType = JsonType.NONE;
+            this.modelType = JsonType.NONE;
         }
 
         /**

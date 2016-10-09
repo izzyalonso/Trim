@@ -72,7 +72,7 @@ enum JsonType{
         if (type.equals(String.class)){
             return STRING;
         }
-        if (type.isAssignableFrom(Collection.class)){
+        if (Collection.class.isAssignableFrom(type)){
             return ARRAY;
         }
         return OBJECT;
