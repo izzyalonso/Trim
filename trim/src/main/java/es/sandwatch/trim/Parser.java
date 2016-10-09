@@ -145,7 +145,7 @@ class Parser{
                 String key = keys.next();
                 Set<FieldNode<JsonType>> objectFields = null;
                 Object unknown = object.get(key);
-                JsonType type = getJsonTypeOf(unknown);
+                JsonType type = JsonType.getTypeOf(unknown);
                 //If the next object is a nested JSON object, parse it
                 if (type == JsonType.OBJECT){
                     objectFields = parseJsonInternal(unknown.toString());
@@ -180,7 +180,7 @@ class Parser{
             //Get only the first item in the array, let's assume all items are of the same type
             //TODO? Java is statically typed though
             Object unknown = array.get(0);
-            JsonType type = getJsonTypeOf(unknown);
+            JsonType type = JsonType.getTypeOf(unknown);
             if (type == JsonType.OBJECT){
                 objectFields = parseJsonInternal(unknown.toString());
             }
@@ -190,37 +190,6 @@ class Parser{
             set.add(new FieldNode<>(type, "", objectFields));
         }
         return set;
-    }
-
-    /**
-     * Gets the json type of an object returned by JSONObject.get().
-     *
-     * @param unknown the object to be evaluated.
-     * @return its JsonType.
-     */
-    private @NotNull JsonType getJsonTypeOf(@NotNull Object unknown){
-        if (JSONObject.NULL.equals(unknown)){
-            return JsonType.NULL;
-        }
-        if (unknown instanceof Boolean){
-            return JsonType.BOOLEAN;
-        }
-        if (unknown instanceof Integer || unknown instanceof Long){
-            return JsonType.NUMBER;
-        }
-        if (unknown instanceof Float || unknown instanceof Double){
-            return JsonType.NUMBER;
-        }
-        if (unknown instanceof String){
-            return JsonType.STRING;
-        }
-        if (unknown instanceof JSONObject){
-            return JsonType.OBJECT;
-        }
-        if (unknown instanceof JSONArray){
-            return JsonType.ARRAY;
-        }
-        return JsonType.NONE;
     }
 
 
@@ -233,8 +202,7 @@ class Parser{
     static class FieldNode<T>{
         private T payload;
         private String name;
-        private Collection<FieldNode<T>> children;
-        private Set<String> childrenNames;
+        private Map<String, FieldNode<T>> children;
 
 
         /**
@@ -246,11 +214,10 @@ class Parser{
         private FieldNode(@NotNull T payload, @NotNull String name, @Nullable Collection<FieldNode<T>> children){
             this.payload = payload;
             this.name = name;
-            this.children = children;
             if (children != null){
-                this.childrenNames = new HashSet<>();
-                for (FieldNode child:children){
-                    childrenNames.add(child.getName());
+                this.children = new HashMap<>();
+                for (FieldNode<T> child:children){
+                    this.children.put(child.getName(), child);
                 }
             }
         }
@@ -283,11 +250,11 @@ class Parser{
         }
 
         /**
-         * Getter for the list of object's fields, if any.
+         * Children getter.
          *
-         * @return the named list.
+         * @return the children map.
          */
-        @Nullable Collection<FieldNode<T>> getChildren(){
+        Map<String, FieldNode<T>> getChildren(){
             return children;
         }
 
@@ -298,7 +265,11 @@ class Parser{
          * @return true if it does, false otherwise.
          */
         boolean contains(String childName){
-            return childrenNames.contains(childName);
+            return children.containsKey(childName);
+        }
+
+        FieldNode<T> get(String childName){
+            return children.get(childName);
         }
 
         /**
@@ -307,16 +278,7 @@ class Parser{
          * @param childName the name of the child to be removed.
          */
         void remove(String childName){
-            childrenNames.remove(childName);
-        }
-
-        /**
-         * Children name getter.
-         *
-         * @return the children name set.
-         */
-        Set<String> getChildrenNames(){
-            return childrenNames;
+            children.remove(childName);
         }
 
         @Override
@@ -339,22 +301,11 @@ class Parser{
             result.append(name);
             if (isParsedObject()){
                 spacing += "  ";
-                for (FieldNode field: children){
-                    result.append(field.toString(spacing));
+                for (FieldNode<T> node: children.values()){
+                    result.append(node.toString(spacing));
                 }
             }
             return result.toString();
         }
-    }
-
-
-    /**
-     * Data types supported by JSON.
-     *
-     * @author Ismael Alonso
-     * @version 1.0.0
-     */
-    enum JsonType{
-        NUMBER, STRING, BOOLEAN, ARRAY, OBJECT, NULL, NONE
     }
 }

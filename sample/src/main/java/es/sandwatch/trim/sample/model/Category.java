@@ -20,7 +20,7 @@ public class Category{
     @AttributeName("description")
     private String description;
     @AttributeName("html_description")
-    private String htmlDescription;
+    private int htmlDescription;
     @AttributeName("icon_url")
     private String iconUrl;
 
