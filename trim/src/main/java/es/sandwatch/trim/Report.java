@@ -139,7 +139,7 @@ public class Report{
          *
          * @param name the name of the attribute.
          */
-        AttributeReport(String name){
+        AttributeReport(@NotNull String name){
             this.name = name;
             this.used = false;
             this.apiType = JsonType.NONE;
@@ -164,14 +164,14 @@ public class Report{
          * @param modelType the type found in the model.
          * @return this object
          */
-        AttributeReport setTypes(JsonType apiType, JsonType modelType){
+        AttributeReport setTypes(@NotNull JsonType apiType, @NotNull JsonType modelType){
             this.apiType = apiType;
             this.modelType = modelType;
             return this;
         }
 
         @Override
-        public String toString() {
+        public String toString(){
             StringBuilder result = new StringBuilder().append(name).append(": ").append(used ? "used" : "unused");
             if (used){
                 result.append(", ");
@@ -183,6 +183,46 @@ public class Report{
                             .append(apiType).append(" in endpoint, ")
                             .append(modelType).append(" in model)");
                 }
+            }
+            return result.toString();
+        }
+    }
+
+
+    /**
+     * Attribute report for the case where the attribute is an Object or an Array.
+     *
+     * @author Ismael Alonso
+     * @version 1.0.0
+     */
+    static class ObjectReport extends AttributeReport{
+        private List<AttributeReport> attributeReports;
+
+
+        /**
+         * Constructor.
+         *
+         * @param name the name of the attribute.
+         */
+        ObjectReport(String name){
+            super(name);
+            attributeReports = new ArrayList<>();
+        }
+
+        /**
+         * Adds an attribute report.
+         *
+         * @param attributeReport the attribute report to be added.
+         */
+        void addAttributeReport(AttributeReport attributeReport){
+            attributeReports.add(attributeReport);
+        }
+
+        @Override
+        public String toString(){
+            StringBuilder result = new StringBuilder().append(super.toString());
+            for (AttributeReport attributeReport:attributeReports){
+                result.append("  ").append(attributeReport);
             }
             return result.toString();
         }
