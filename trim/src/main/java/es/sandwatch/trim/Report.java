@@ -107,7 +107,7 @@ public class Report{
                 }
                 else{
                     for (AttributeReport attributeReport:attributeReports){
-                        report.append("\n    ").append(attributeReport);
+                        report.append("\n  ").append(attributeReport);
                     }
                 }
             }
@@ -123,7 +123,7 @@ public class Report{
      * @version 1.0.0
      */
     static class AttributeReport{
-        private String name;
+        String name;
         private boolean used;
         private JsonType apiType;
         private JsonType modelType;
@@ -191,6 +191,7 @@ public class Report{
      * @version 1.0.0
      */
     static class ObjectReport extends AttributeReport{
+        private static String spacing = "  ";
         private List<AttributeReport> attributeReports;
 
 
@@ -215,10 +216,18 @@ public class Report{
 
         @Override
         public String toString(){
-            StringBuilder result = new StringBuilder().append(super.toString());
-            for (AttributeReport attributeReport:attributeReports){
-                result.append("  ").append(attributeReport);
+            StringBuilder result = new StringBuilder();
+            if (!name.isEmpty()){
+                result.append(super.toString());
             }
+            else{
+                result.append("Result:");
+            }
+            spacing += "  ";
+            for (AttributeReport attributeReport:attributeReports){
+                result.append("\n").append(spacing).append(attributeReport);
+            }
+            spacing = spacing.substring(2);
             return result.toString();
         }
     }

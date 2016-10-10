@@ -5,6 +5,7 @@ import es.sandwatch.trim.Report;
 import es.sandwatch.trim.Trim;
 import es.sandwatch.trim.sample.model.Category;
 import es.sandwatch.trim.sample.model.Goal;
+import es.sandwatch.trim.sample.model.UserAction;
 import org.jetbrains.annotations.NotNull;
 
 
@@ -17,8 +18,9 @@ import org.jetbrains.annotations.NotNull;
 public class Sample implements Trim.ProgressListener{
     private Sample(){
         ApiSpecification spec = new ApiSpecification()
-                .addModel(Category.class)
-                .addModel(Goal.class);
+                //.addModel(Category.class)
+                //.addModel(Goal.class)
+                .addModel(UserAction.class);
         Report report = Trim.run(spec, this);
         System.out.println(report);
     }

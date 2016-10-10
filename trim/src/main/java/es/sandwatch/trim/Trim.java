@@ -79,7 +79,7 @@ public class Trim{
         return report;
     }
 
-    private Report.EndpointReport createEndpointReport(Class<?> model, Fetcher.RequestResult result){
+    private @NotNull Report.EndpointReport createEndpointReport(Class<?> model, Fetcher.RequestResult result){
         Report.EndpointReport report = new Report.EndpointReport(model, result);
 
         //If successful
@@ -90,29 +90,53 @@ public class Trim{
                 report.setResponseFormatError();
             }
             else{
-                //Create and populate the field list
-                List<Parser.FieldNode<Field>> fields = Parser.parseClass(model);
-                for (Parser.FieldNode<Field> field:fields){
-                    //Determine if it exists in the API response
-                    if (endpointObject.contains(field.getName())){
-                        JsonType apiType = endpointObject.get(field.getName()).getPayload();
-                        JsonType modelType = JsonType.getTypeOf(field.getPayload().getType());
-                        Report.AttributeReport attributeReport = new Report.AttributeReport(field.getName())
-                                .setUsed(true)
-                                .setTypes(apiType, modelType);
-                        report.addAttributeReport(attributeReport);
-                        endpointObject.remove(field.getName());
-                    }
-                }
+                //Parse the model structure
+                Map<String, Parser.FieldNode<Field>> fields = Parser.parseClass(model);
 
-                //The rest of the fields in the keys set are not used in the model
-                for (Parser.FieldNode key : endpointObject.getChildren().values()) {
-                    Report.AttributeReport attributeReport = new Report.AttributeReport(key.getName())
-                            .setUsed(false);
-                    report.addAttributeReport(attributeReport);
-                }
+                System.out.println("\nFrom endpoint:\n");
+                System.out.println(endpointObject);
+                System.out.println("\n\nFrom model:\n");
+                System.out.println(fields.values());
+
+                report.addAttributeReport(createObjectReport(endpointObject, fields));
             }
         }
+        return report;
+    }
+
+    private @NotNull Report.ObjectReport createObjectReport(Parser.FieldNode<JsonType> jsonObject,
+                                                            Map<String, Parser.FieldNode<Field>> modelFields){
+
+        Report.ObjectReport report = new Report.ObjectReport(jsonObject.getName());
+        for (Parser.FieldNode<JsonType> attribute:jsonObject.getChildren().values()){
+            report.addAttributeReport(createAttributeReport(attribute, modelFields));
+        }
+
+        return report;
+    }
+
+    private Report.AttributeReport createAttributeReport(Parser.FieldNode<JsonType> jsonObject,
+                                                         Map<String, Parser.FieldNode<Field>> modelFields){
+
+        Report.AttributeReport report;
+        if (modelFields.containsKey(jsonObject.getName())){
+            if (jsonObject.isParsedObject()){
+                report = createObjectReport(jsonObject, modelFields.get(jsonObject.getName()).getChildren());
+            }
+            else{
+                report = new Report.AttributeReport(jsonObject.getName());
+            }
+            JsonType apiType = jsonObject.getPayload();
+            JsonType modelType = JsonType.getTypeOf(modelFields.get(jsonObject.getName()).getPayload().getType());
+            report.setUsed(true)
+                    .setTypes(apiType, modelType);
+
+        }
+        else{
+            report = new Report.AttributeReport(jsonObject.getName());
+            report.setUsed(false);
+        }
+
         return report;
     }
 

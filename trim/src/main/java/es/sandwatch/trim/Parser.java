@@ -27,10 +27,15 @@ class Parser{
      * @param src the class to parse.
      * @return the root node of the complete model hierarchy
      */
-    static @NotNull List<FieldNode<Field>> parseClass(@NotNull Class<?> src){
+    static @NotNull Map<String, FieldNode<Field>> parseClass(@NotNull Class<?> src){
         List<FieldNode<Field>> classFields = new ArrayList<>();
         new Parser().parseClass(src, classFields);
-        return classFields;
+        //Put the results into a map.
+        Map<String, FieldNode<Field>> result = new HashMap<>();
+        for (FieldNode<Field> node:classFields){
+            result.put(node.getName(), node);
+        }
+        return result;
     }
 
     /**
@@ -40,7 +45,7 @@ class Parser{
      * @return a set of FieldNodes.
      */
     static @NotNull FieldNode<JsonType> parseJson(@NotNull String src){
-        return new FieldNode<>(JsonType.OBJECT, "root", new Parser().parseJsonInternal(src));
+        return new FieldNode<>(JsonType.OBJECT, "", new Parser().parseJsonInternal(src));
     }
 
 
@@ -122,7 +127,7 @@ class Parser{
      */
     private boolean shouldParseClass(Class<?> target){
         return !ClassUtils.isPrimitiveOrWrapper(target) &&
-                !CharSequence.class.isAssignableFrom(target)  &&
+                !CharSequence.class.isAssignableFrom(target) &&
                 !Collection.class.isAssignableFrom(target) &&
                 !seenClasses.contains(target);
     }
@@ -301,7 +306,7 @@ class Parser{
             result.append(name);
             if (isParsedObject()){
                 spacing += "  ";
-                for (FieldNode<T> node: children.values()){
+                for (FieldNode<T> node:children.values()){
                     result.append(node.toString(spacing));
                 }
             }
