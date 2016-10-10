@@ -176,9 +176,10 @@ class Parser{
      * @return a set of FieldNodes containing a single FieldNode representing the structure of the array's items.
      */
     private Set<FieldNode<JsonType>> parseJsonArrayInternal(JSONArray array){
-        Set<FieldNode<JsonType>> set = new HashSet<>();
         if (array.length() == 0){
+            Set<FieldNode<JsonType>> set = new HashSet<>();
             set.add(new FieldNode<>(JsonType.NONE, "", null));
+            return set;
         }
         else{
             Set<FieldNode<JsonType>> objectFields = null;
@@ -192,9 +193,8 @@ class Parser{
             else if (type == JsonType.ARRAY){
                 objectFields = parseJsonArrayInternal((JSONArray)unknown);
             }
-            set.add(new FieldNode<>(type, "", objectFields));
+            return objectFields;
         }
-        return set;
     }
 
 
