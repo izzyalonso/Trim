@@ -69,45 +69,50 @@ public class Trim{
         //Execute the requests to endpoints
         for (Class<?> model:specification.getModels()){
             Fetcher.RequestResult result = fetcher.getEndpointData(model);
-            Report.EndpointReport endpointReport = report.addEndpointReport(model, result);
-
-            //If successful
-            if (result.is2xx()){
-                //Parse the response and create the usage map and the field list
-                Parser.FieldNode<JsonType> endpointObject = Parser.parseJson(result.getResponse());
-                if (!endpointObject.isParsedObject()){
-                    endpointReport.setResponseFormatError();
-                }
-                else {
-                    //Create and populate the field list
-                    List<Parser.FieldNode<Field>> fields = Parser.parseClass(model);
-                    for (Parser.FieldNode<Field> field:fields){
-                        //Determine if it exists in the API response
-                        if (endpointObject.contains(field.getName())){
-                            JsonType apiType = endpointObject.get(field.getName()).getPayload();
-                            JsonType modelType = JsonType.getTypeOf(field.getPayload().getType());
-                            Report.AttributeReport attributeReport = new Report.AttributeReport(field.getName())
-                                    .setUsed(true)
-                                    .setTypes(apiType, modelType);
-                            endpointReport.addAttributeReport(attributeReport);
-                            endpointObject.remove(field.getName());
-                        }
-                    }
-
-                    //The rest of the fields in the keys set are not used in the model
-                    for (Parser.FieldNode key:endpointObject.getChildren().values()){
-                        Report.AttributeReport attributeReport = new Report.AttributeReport(key.getName())
-                                .setUsed(false);
-                        endpointReport.addAttributeReport(attributeReport);
-                    }
-                }
-            }
+            report.addEndpointReport(createEndpointReport(model, result));
 
             if (listener != null){
                 listener.onEndpointReportComplete(model, ++completed);
             }
         }
 
+        return report;
+    }
+
+    private Report.EndpointReport createEndpointReport(Class<?> model, Fetcher.RequestResult result){
+        Report.EndpointReport report = new Report.EndpointReport(model, result);
+
+        //If successful
+        if (result.is2xx()){
+            //Parse the response and create the usage map and the field list
+            Parser.FieldNode<JsonType> endpointObject = Parser.parseJson(result.getResponse());
+            if (!endpointObject.isParsedObject()){
+                report.setResponseFormatError();
+            }
+            else{
+                //Create and populate the field list
+                List<Parser.FieldNode<Field>> fields = Parser.parseClass(model);
+                for (Parser.FieldNode<Field> field:fields){
+                    //Determine if it exists in the API response
+                    if (endpointObject.contains(field.getName())){
+                        JsonType apiType = endpointObject.get(field.getName()).getPayload();
+                        JsonType modelType = JsonType.getTypeOf(field.getPayload().getType());
+                        Report.AttributeReport attributeReport = new Report.AttributeReport(field.getName())
+                                .setUsed(true)
+                                .setTypes(apiType, modelType);
+                        report.addAttributeReport(attributeReport);
+                        endpointObject.remove(field.getName());
+                    }
+                }
+
+                //The rest of the fields in the keys set are not used in the model
+                for (Parser.FieldNode key : endpointObject.getChildren().values()) {
+                    Report.AttributeReport attributeReport = new Report.AttributeReport(key.getName())
+                            .setUsed(false);
+                    report.addAttributeReport(attributeReport);
+                }
+            }
+        }
         return report;
     }
 

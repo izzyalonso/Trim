@@ -24,17 +24,12 @@ public class Report{
     }
 
     /**
-     * Creates an instance of EndpointReport and adds it to the list.
+     * Adds an endpoint report to the report.
      *
-     * @param model the model associated to the report.
-     * @param requestResult the result of the request to the above model.
-     * @return the report object.
+     * @param endpointReport an endpoint report.
      */
-    @NotNull
-    EndpointReport addEndpointReport(@NotNull Class<?> model, @NotNull Fetcher.RequestResult requestResult){
-        EndpointReport report = new EndpointReport(model, requestResult);
-        endpointReports.add(report);
-        return report;
+    void addEndpointReport(@NotNull EndpointReport endpointReport){
+        endpointReports.add(endpointReport);
     }
 
     @Override
@@ -59,7 +54,7 @@ public class Report{
      * @author Ismael Alonso
      * @version 1.0.0
      */
-    class EndpointReport{
+    static class EndpointReport{
         private Class<?> model;
         private Fetcher.RequestResult requestResult;
         private boolean responseFormatError;
@@ -72,7 +67,7 @@ public class Report{
          * @param model the model associated to the report.
          * @param requestResult the result of the request to the above model.
          */
-        private EndpointReport(@NotNull Class<?> model, @NotNull Fetcher.RequestResult requestResult){
+        EndpointReport(@NotNull Class<?> model, @NotNull Fetcher.RequestResult requestResult){
             this.model = model;
             this.requestResult = requestResult;
             this.responseFormatError = false;
