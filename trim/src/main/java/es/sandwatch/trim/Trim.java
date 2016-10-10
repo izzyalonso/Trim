@@ -69,43 +69,86 @@ public class Trim{
         //Execute the requests to endpoints
         for (Class<?> model:specification.getModels()){
             Fetcher.RequestResult result = fetcher.getEndpointData(model);
-            Report.EndpointReport endpointReport = report.addEndpointReport(model, result);
-
-            //If successful
-            if (result.is2xx()){
-                //Parse the response and create the usage map and the field list
-                Parser.FieldNode<JsonType> endpointObject = Parser.parseJson(result.getResponse());
-                if (!endpointObject.isParsedObject()){
-                    endpointReport.setResponseFormatError();
-                }
-                else {
-                    //Create and populate the field list
-                    List<Parser.FieldNode<Field>> fields = Parser.parseClass(model);
-                    for (Parser.FieldNode<Field> field:fields){
-                        //Determine if it exists in the API response
-                        if (endpointObject.contains(field.getName())){
-                            JsonType apiType = endpointObject.get(field.getName()).getPayload();
-                            JsonType modelType = JsonType.getTypeOf(field.getPayload().getType());
-                            Report.AttributeReport attributeReport = new Report.AttributeReport(field.getName())
-                                    .setUsed(true)
-                                    .setTypes(apiType, modelType);
-                            endpointReport.addAttributeReport(attributeReport);
-                            endpointObject.remove(field.getName());
-                        }
-                    }
-
-                    //The rest of the fields in the keys set are not used in the model
-                    for (Parser.FieldNode key:endpointObject.getChildren().values()){
-                        Report.AttributeReport attributeReport = new Report.AttributeReport(key.getName())
-                                .setUsed(false);
-                        endpointReport.addAttributeReport(attributeReport);
-                    }
-                }
-            }
+            report.addEndpointReport(createEndpointReport(model, result));
 
             if (listener != null){
                 listener.onEndpointReportComplete(model, ++completed);
             }
+        }
+
+        return report;
+    }
+
+    private @NotNull Report.EndpointReport createEndpointReport(Class<?> model, Fetcher.RequestResult result){
+        Report.EndpointReport report = new Report.EndpointReport(model, result);
+
+        //If successful
+        if (result.is2xx()){
+            //Parse the response and create the usage map and the field list
+            Parser.FieldNode<JsonType> endpointObject = Parser.parseJson(result.getResponse());
+            if (!endpointObject.isParsedObject()){
+                report.setResponseFormatError();
+            }
+            else{
+                //Parse the model structure
+                Map<String, Parser.FieldNode<Field>> fields = Parser.parseClass(model);
+                report.addAttributeReport(createObjectReport(endpointObject, fields));
+            }
+        }
+        return report;
+    }
+
+    /**
+     * Creates an ObjectReport for a Json FieldNode given a map of model fields.
+     *
+     * @param jsonNode the Json FieldNode whose report is to be generated. The payload needs to be of type
+     *                 {@code JsonType.OBJECT} or {@code JsonType.Array}.
+     * @param modelFields the set of fields in the model that share hierarchy with the Json FieldNode's children.
+     * @return the generated ObjectReport.
+     */
+    private @NotNull Report.ObjectReport createObjectReport(@NotNull Parser.FieldNode<JsonType> jsonNode,
+                                                            @NotNull Map<String, Parser.FieldNode<Field>> modelFields){
+
+        Report.ObjectReport report = new Report.ObjectReport(jsonNode.getName());
+        if (jsonNode.isParsedObject()){
+            //Generate AttributeReports for all children
+            for (Parser.FieldNode<JsonType> attribute:jsonNode.getChildren().values()){
+                report.addAttributeReport(createAttributeReport(attribute, modelFields));
+            }
+        }
+
+        return report;
+    }
+
+    /**
+     * Creates an AttributeReport for a Json FieldNode given a map of model fields.
+     *
+     * @param jsonObject the Json FieldNode whose report is to be generated.
+     * @param modelFields the set of fields in the model that share hierarchy with the Json FieldNode's children.
+     * @return the generated AttributeReport.
+     */
+    private Report.AttributeReport createAttributeReport(@NotNull Parser.FieldNode<JsonType> jsonObject,
+                                                         @NotNull Map<String, Parser.FieldNode<Field>> modelFields){
+
+        Report.AttributeReport report;
+        if (modelFields.containsKey(jsonObject.getName())){
+            //If this is a JsonType.OBJECT or a JsonType.ARRAY, create an ObjectReport
+            if (jsonObject.isParsedObject()){
+                report = createObjectReport(jsonObject, modelFields.get(jsonObject.getName()).getChildren());
+            }
+            else{
+                report = new Report.AttributeReport(jsonObject.getName());
+            }
+            //Populate the report
+            JsonType apiType = jsonObject.getPayload();
+            JsonType modelType = JsonType.getTypeOf(modelFields.get(jsonObject.getName()).getPayload().getType());
+            report.setUsed(true)
+                    .setTypes(apiType, modelType);
+
+        }
+        else{
+            report = new Report.AttributeReport(jsonObject.getName());
+            report.setUsed(false);
         }
 
         return report;
