@@ -1,12 +1,9 @@
 package es.sandwatch.trim.sample;
 
-import es.sandwatch.trim.ApiSpecification;
+import es.sandwatch.trim.Specification;
 import es.sandwatch.trim.Report;
 import es.sandwatch.trim.Trim;
-import es.sandwatch.trim.sample.model.Category;
 import es.sandwatch.trim.sample.model.CategoryList;
-import es.sandwatch.trim.sample.model.Goal;
-import es.sandwatch.trim.sample.model.UserAction;
 import org.jetbrains.annotations.NotNull;
 
 
@@ -18,7 +15,7 @@ import org.jetbrains.annotations.NotNull;
  */
 public class Sample implements Trim.ProgressListener{
     private Sample(){
-        ApiSpecification spec = new ApiSpecification()
+        Specification spec = new Specification()
                 //.addModel(Category.class)
                 //.addModel(Goal.class)
                 .addModel(CategoryList.class);

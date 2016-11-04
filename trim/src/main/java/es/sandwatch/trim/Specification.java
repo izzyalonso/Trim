@@ -14,7 +14,12 @@ import java.util.Map;
  * @author Ismael Alonso
  * @version 1.0.0
  */
-public class ApiSpecification{
+public class Specification{
+    /**
+     * The current version of the app
+     */
+    private int appVersion;
+
     /**
      * The list of models to be inspected.
      */
@@ -34,10 +39,20 @@ public class ApiSpecification{
     /**
      * Constructor.
      */
-    public ApiSpecification(){
+    public Specification(){
+        appVersion = -1;
         models = new ArrayList<>();
         headers = new HashMap<>();
         locked = false;
+    }
+
+    /**
+     * Sets the current application version.
+     *
+     * @param appVersion the current version of the application.
+     */
+    public void setCurrentApplicationVersion(int appVersion){
+        this.appVersion = appVersion;
     }
 
     /**
@@ -46,7 +61,7 @@ public class ApiSpecification{
      * @param model the model to be added.
      * @return this object.
      */
-    public ApiSpecification addModel(@NotNull Class<?> model){
+    public Specification addModel(@NotNull Class<?> model){
         if (!locked){
             models.add(model);
         }
@@ -60,7 +75,7 @@ public class ApiSpecification{
      * @param value the value of the header to be added.
      * @return this object.
      */
-    public ApiSpecification addHeader(@NotNull String header, @NotNull String value){
+    public Specification addHeader(@NotNull String header, @NotNull String value){
         if (!locked){
             headers.put(header, value);
         }
@@ -72,6 +87,15 @@ public class ApiSpecification{
      */
     void lock(){
         locked = true;
+    }
+
+    /**
+     * Application version getter.
+     *
+     * @return the application version.
+     */
+    int getAppVersion(){
+        return appVersion;
     }
 
     /**

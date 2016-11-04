@@ -17,38 +17,38 @@ public class Trim{
     /**
      * Triggers the analysis without setting a progress listener.
      *
-     * @param specification the ApiSpecification object containing all API and model information.
+     * @param specification the Specification object containing all API and model information.
      * @return the report object.
      */
-    public static @NotNull Report run(@NotNull ApiSpecification specification){
+    public static @NotNull Report run(@NotNull Specification specification){
         return run(specification, null);
     }
 
     /**
      * Triggers the analysis with a progress listener.
      *
-     * @param specification the ApiSpecification object containing all API and model information.
+     * @param specification the Specification object containing all API and model information.
      * @param listener the progress listener or null if you are not interested in progress updates.
      * @return the report object.
      */
-    public static @NotNull Report run(@NotNull ApiSpecification specification, @Nullable ProgressListener listener){
+    public static @NotNull Report run(@NotNull Specification specification, @Nullable ProgressListener listener){
         specification.lock();
         Trim trim = new Trim(specification, listener);
         return trim.run();
     }
 
 
-    private ApiSpecification specification;
+    private Specification specification;
     private ProgressListener listener;
 
 
     /**
      * Constructor.
      *
-     * @param specification the ApiSpecification object containing all API and model information.
+     * @param specification the Specification object containing all API and model information.
      * @param listener the progress listener or null if you are not interested in progress updates.
      */
-    private Trim(@NotNull ApiSpecification specification, @Nullable ProgressListener listener){
+    private Trim(@NotNull Specification specification, @Nullable ProgressListener listener){
         this.specification = specification;
         this.listener = listener;
     }
