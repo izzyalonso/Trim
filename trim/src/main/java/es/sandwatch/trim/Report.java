@@ -125,6 +125,7 @@ public class Report{
     static class AttributeReport{
         String name;
         private boolean used;
+        private int versionsSinceRemoval;
         private JsonType apiType;
         private JsonType modelType;
 
@@ -137,6 +138,7 @@ public class Report{
         AttributeReport(@NotNull String name){
             this.name = name;
             this.used = false;
+            this.versionsSinceRemoval = -1;
             this.apiType = JsonType.NONE;
             this.modelType = JsonType.NONE;
         }
@@ -149,6 +151,19 @@ public class Report{
          */
         AttributeReport setUsed(boolean used){
             this.used = used;
+            this.versionsSinceRemoval = -1;
+            return this;
+        }
+
+        /**
+         * Sets the number of versions since this attribute was removed.
+         *
+         * @param versionsSinceRemoval the number of versions since the attribute was removed from the class.
+         * @return this object.
+         */
+        AttributeReport setVersionsSinceRemoval(int versionsSinceRemoval){
+            this.versionsSinceRemoval = versionsSinceRemoval;
+            this.used = false;
             return this;
         }
 
@@ -167,7 +182,13 @@ public class Report{
 
         @Override
         public String toString(){
-            StringBuilder result = new StringBuilder().append(name).append(": ").append(used ? "used" : "unused");
+            StringBuilder result = new StringBuilder().append(name).append(": ");
+            if (versionsSinceRemoval == -1){
+                result.append(used ? "used" : "unused");
+            }
+            else{
+                result.append("removed ").append(versionsSinceRemoval).append(" versions ago");
+            }
             if (used){
                 result.append(", ");
                 if (apiType == modelType){
