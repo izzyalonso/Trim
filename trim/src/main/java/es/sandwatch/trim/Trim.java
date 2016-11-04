@@ -1,5 +1,6 @@
 package es.sandwatch.trim;
 
+import es.sandwatch.trim.annotation.RemovedInVersion;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -132,19 +133,24 @@ public class Trim{
 
         Report.AttributeReport report;
         if (modelFields.containsKey(jsonObject.getName())){
+            Parser.FieldNode<Field> field = modelFields.get(jsonObject.getName());
             //If this is a JsonType.OBJECT or a JsonType.ARRAY, create an ObjectReport
             if (jsonObject.isParsedObject()){
-                report = createObjectReport(jsonObject, modelFields.get(jsonObject.getName()).getChildren());
+                report = createObjectReport(jsonObject, field.getChildren());
             }
             else{
                 report = new Report.AttributeReport(jsonObject.getName());
             }
             //Populate the report
             JsonType apiType = jsonObject.getPayload();
-            JsonType modelType = JsonType.getTypeOf(modelFields.get(jsonObject.getName()).getPayload().getType());
+            JsonType modelType = JsonType.getTypeOf(field.getPayload().getType());
             report.setUsed(true)
                     .setTypes(apiType, modelType);
 
+            RemovedInVersion removedInVersion = field.getPayload().getAnnotation(RemovedInVersion.class);
+            if (removedInVersion != null){
+                report.setVersionsSinceRemoval(specification.getAppVersion()-removedInVersion.value());
+            }
         }
         else{
             report = new Report.AttributeReport(jsonObject.getName());

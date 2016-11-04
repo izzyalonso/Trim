@@ -51,8 +51,9 @@ public class Specification{
      *
      * @param appVersion the current version of the application.
      */
-    public void setCurrentApplicationVersion(int appVersion){
+    public Specification setCurrentApplicationVersion(int appVersion){
         this.appVersion = appVersion;
+        return this;
     }
 
     /**
