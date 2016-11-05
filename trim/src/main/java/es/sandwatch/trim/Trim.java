@@ -1,6 +1,7 @@
 package es.sandwatch.trim;
 
-import es.sandwatch.trim.annotation.RemovedInVersion;
+import es.sandwatch.trim.annotation.Endpoint;
+import es.sandwatch.trim.annotation.UnusedSinceVersion;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -147,9 +148,9 @@ public class Trim{
             report.setUsed(true)
                     .setTypes(apiType, modelType);
 
-            RemovedInVersion removedInVersion = field.getPayload().getAnnotation(RemovedInVersion.class);
-            if (removedInVersion != null){
-                report.setVersionsSinceRemoval(specification.getAppVersion()-removedInVersion.value());
+            UnusedSinceVersion unusedSinceVersion = field.getPayload().getAnnotation(UnusedSinceVersion.class);
+            if (unusedSinceVersion != null){
+                report.setVersionsSinceLeftUnused(specification.getAppVersion()-unusedSinceVersion.value());
             }
         }
         else{

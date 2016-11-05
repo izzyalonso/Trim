@@ -13,6 +13,6 @@ import java.lang.annotation.Target;
  */
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.FIELD)
-public @interface RemovedInVersion{
+public @interface UnusedSinceVersion {
     int value();
 }

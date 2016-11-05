@@ -7,13 +7,13 @@ import es.sandwatch.trim.annotation.*;
  */
 @Endpoint("https://staging.tndata.org/api/users/actions/54040/")
 @Headers({
-        @Header(header = "Authorization", value = "Token xxx")
+        @Header(header = "Authorization", value = "Token XXX")
 })
 public class UserAction extends Action{
     private TDCAction action;
 
     @AttributeName("userbehavior_id")
-    @RemovedInVersion(22)
+    @UnusedSinceVersion(22)
     private long userBehaviorId;
 
     @AttributeName("primary_goal")
