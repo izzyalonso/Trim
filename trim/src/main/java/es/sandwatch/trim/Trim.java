@@ -1,5 +1,7 @@
 package es.sandwatch.trim;
 
+import es.sandwatch.trim.annotation.Endpoint;
+import es.sandwatch.trim.annotation.UnusedSinceVersion;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -17,38 +19,38 @@ public class Trim{
     /**
      * Triggers the analysis without setting a progress listener.
      *
-     * @param specification the ApiSpecification object containing all API and model information.
+     * @param specification the Specification object containing all API and model information.
      * @return the report object.
      */
-    public static @NotNull Report run(@NotNull ApiSpecification specification){
+    public static @NotNull Report run(@NotNull Specification specification){
         return run(specification, null);
     }
 
     /**
      * Triggers the analysis with a progress listener.
      *
-     * @param specification the ApiSpecification object containing all API and model information.
+     * @param specification the Specification object containing all API and model information.
      * @param listener the progress listener or null if you are not interested in progress updates.
      * @return the report object.
      */
-    public static @NotNull Report run(@NotNull ApiSpecification specification, @Nullable ProgressListener listener){
+    public static @NotNull Report run(@NotNull Specification specification, @Nullable ProgressListener listener){
         specification.lock();
         Trim trim = new Trim(specification, listener);
         return trim.run();
     }
 
 
-    private ApiSpecification specification;
+    private Specification specification;
     private ProgressListener listener;
 
 
     /**
      * Constructor.
      *
-     * @param specification the ApiSpecification object containing all API and model information.
+     * @param specification the Specification object containing all API and model information.
      * @param listener the progress listener or null if you are not interested in progress updates.
      */
-    private Trim(@NotNull ApiSpecification specification, @Nullable ProgressListener listener){
+    private Trim(@NotNull Specification specification, @Nullable ProgressListener listener){
         this.specification = specification;
         this.listener = listener;
     }
@@ -132,19 +134,24 @@ public class Trim{
 
         Report.AttributeReport report;
         if (modelFields.containsKey(jsonObject.getName())){
+            Parser.FieldNode<Field> field = modelFields.get(jsonObject.getName());
             //If this is a JsonType.OBJECT or a JsonType.ARRAY, create an ObjectReport
             if (jsonObject.isParsedObject()){
-                report = createObjectReport(jsonObject, modelFields.get(jsonObject.getName()).getChildren());
+                report = createObjectReport(jsonObject, field.getChildren());
             }
             else{
                 report = new Report.AttributeReport(jsonObject.getName());
             }
             //Populate the report
             JsonType apiType = jsonObject.getPayload();
-            JsonType modelType = JsonType.getTypeOf(modelFields.get(jsonObject.getName()).getPayload().getType());
+            JsonType modelType = JsonType.getTypeOf(field.getPayload().getType());
             report.setUsed(true)
                     .setTypes(apiType, modelType);
 
+            UnusedSinceVersion unusedSinceVersion = field.getPayload().getAnnotation(UnusedSinceVersion.class);
+            if (unusedSinceVersion != null){
+                report.setVersionsSinceLeftUnused(specification.getAppVersion()-unusedSinceVersion.value());
+            }
         }
         else{
             report = new Report.AttributeReport(jsonObject.getName());

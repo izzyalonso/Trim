@@ -1,5 +1,6 @@
 package es.sandwatch.trim;
 
+import es.sandwatch.trim.annotation.Endpoint;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
@@ -55,6 +56,7 @@ public class Report{
      * @version 1.0.0
      */
     static class EndpointReport{
+        private String endpoint;
         private Class<?> model;
         private Fetcher.RequestResult requestResult;
         private boolean responseFormatError;
@@ -68,6 +70,7 @@ public class Report{
          * @param requestResult the result of the request to the above model.
          */
         EndpointReport(@NotNull Class<?> model, @NotNull Fetcher.RequestResult requestResult){
+            this.endpoint = model.getAnnotation(Endpoint.class).value();
             this.model = model;
             this.requestResult = requestResult;
             this.responseFormatError = false;
@@ -92,13 +95,14 @@ public class Report{
 
         @Override
         public String toString(){
-            StringBuilder report = new StringBuilder().append(model.toString());
+            StringBuilder report = new StringBuilder().append(endpoint).append("\n").append(model.toString());
             if (requestResult.requestFailed()){
                 report.append("\n  The request could not be performed.");
             }
             else{
                 report.append("\n  Request time: ").append(requestResult.getRequestTime()).append("s");
                 report.append("\n  Request status code: ").append(requestResult.getStatusCode());
+                report.append("\n  Response size: ").append(requestResult.getResponse().length());
                 if (requestResult.is4xx()){
                     report.append("\n  Server response: ").append(requestResult.getResponse());
                 }
@@ -125,6 +129,7 @@ public class Report{
     static class AttributeReport{
         String name;
         private boolean used;
+        private int versionsSinceLeftUnused;
         private JsonType apiType;
         private JsonType modelType;
 
@@ -137,6 +142,7 @@ public class Report{
         AttributeReport(@NotNull String name){
             this.name = name;
             this.used = false;
+            this.versionsSinceLeftUnused = -1;
             this.apiType = JsonType.NONE;
             this.modelType = JsonType.NONE;
         }
@@ -149,6 +155,19 @@ public class Report{
          */
         AttributeReport setUsed(boolean used){
             this.used = used;
+            this.versionsSinceLeftUnused = -1;
+            return this;
+        }
+
+        /**
+         * Sets the number of versions since this attribute was removed.
+         *
+         * @param versionsSinceLeftUnused the number of versions since the attribute was left unused.
+         * @return this object.
+         */
+        AttributeReport setVersionsSinceLeftUnused(int versionsSinceLeftUnused){
+            this.versionsSinceLeftUnused = versionsSinceLeftUnused;
+            this.used = false;
             return this;
         }
 
@@ -167,7 +186,13 @@ public class Report{
 
         @Override
         public String toString(){
-            StringBuilder result = new StringBuilder().append(name).append(": ").append(used ? "used" : "unused");
+            StringBuilder result = new StringBuilder().append(name).append(": ");
+            if (versionsSinceLeftUnused == -1){
+                result.append(used ? "used" : "unused");
+            }
+            else{
+                result.append("left unused ").append(versionsSinceLeftUnused).append(" versions ago");
+            }
             if (used){
                 result.append(", ");
                 if (apiType == modelType){
